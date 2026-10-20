@@ -45,21 +45,6 @@
     dayBannerTitle: document.getElementById('dayBannerTitle'),
     dayBannerSubtitle: document.getElementById('dayBannerSubtitle'),
 
-    // Hero Shot Call (Dagens vigtigste fotomulighed)
-    heroShotCall: document.getElementById('heroShotCall'),
-    heroIconWrap: document.getElementById('heroIconWrap'),
-    heroEventTitle: document.getElementById('heroEventTitle'),
-    heroEventSub: document.getElementById('heroEventSub'),
-    heroScoreBadge: document.getElementById('heroScoreBadge'),
-    heroTimingBar: document.getElementById('heroTimingBar'),
-    heroTimeWindow: document.getElementById('heroTimeWindow'),
-    heroTimeRelative: document.getElementById('heroTimeRelative'),
-    heroVerdictText: document.getElementById('heroVerdictText'),
-    heroSpecCond: document.getElementById('heroSpecCond'),
-    heroSpecWind: document.getElementById('heroSpecWind'),
-    heroSpecAzimuth: document.getElementById('heroSpecAzimuth'),
-    btnHeroCalendar: document.getElementById('btnHeroCalendar'),
-
     // Tåge
     cardFog: document.getElementById('cardFog'),
     fogBadge: document.getElementById('fogBadge'),
@@ -166,9 +151,6 @@
     astro: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
     moon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
   };
-
-  // Kalender payload for aktiv Hero Shot Call
-  let currentHeroCalendarPayload = null;
 
   // --- INITIALISERING ---
   async function init() {
@@ -802,198 +784,12 @@
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
-  // --- HERO SHOT CALL (DAGENS MEST OPTIMALE FOTOVINDUE) ---
-  function renderHeroShotCall(day) {
-    if (!el.heroShotCall || !day) return;
-
-    const now = new Date();
-    const isToday = state.selectedDayIndex === 0;
-    const locName = state.currentLoc.name || 'Lokation';
-
-    const candidates = [];
-
-    // 1. Tågekandidat
-    if (day.sun.sunrise) {
-      const fogStart = new Date(day.sun.sunrise.getTime() - 60 * 60 * 1000);
-      const fogEnd = new Date(day.sun.sunrise.getTime() + 65 * 60 * 1000);
-      const fogScore = day.fog.score || 0;
-      const isPassed = isToday && now > fogEnd;
-      const isActive = isToday && now >= fogStart && now <= fogEnd;
-      candidates.push({
-        type: 'fog',
-        title: 'Morgentåge & Daggry',
-        sub: 'Strålingståge, søer & lavninger',
-        score: fogScore,
-        start: fogStart,
-        end: fogEnd,
-        isPassed: isPassed,
-        isActive: isActive,
-        iconSvg: SVG_ICONS.fog,
-        verdict: day.fog.text,
-        cond: `${day.fog.avgSpread}°C dugpunktsdiff.`,
-        wind: `${day.fog.avgWind} m/s`,
-        azimuth: day.sunriseAzimuth !== null ? `${Math.round(day.sunriseAzimuth)}° ${AstroCalc.getCompassDirection(day.sunriseAzimuth)}` : 'Øst',
-        calSummary: `📸 FotoVejr: Morgentåge & Daggry (${locName})`,
-        calDesc: `Morgentåge-indeks: ${fogScore}%\nTidsvindue: ${AstroCalc.formatTime(fogStart)} – ${AstroCalc.formatTime(fogEnd)}\nDugpunktsforskel: ${day.fog.avgSpread}°C, Vind: ${day.fog.avgWind} m/s\nSolopgang kl. ${AstroCalc.formatTime(day.sun.sunrise)}`
-      });
-    }
-
-    // 2. Daggry & Gylden morgen
-    if (day.sun.sunrise) {
-      const mStart = (day.sun.blueHourMorning && day.sun.blueHourMorning.start) || new Date(day.sun.sunrise.getTime() - 50 * 60 * 1000);
-      const mEnd = (day.sun.goldenHourMorning && day.sun.goldenHourMorning.end) || new Date(day.sun.sunrise.getTime() + 45 * 60 * 1000);
-      const mScore = day.goldenMorning.score || 0;
-      const isPassed = isToday && now > mEnd;
-      const isActive = isToday && now >= mStart && now <= mEnd;
-      candidates.push({
-        type: 'morning',
-        title: 'Daggry & Morgenlys',
-        sub: 'Blå time & gylden time',
-        score: mScore,
-        start: mStart,
-        end: mEnd,
-        isPassed: isPassed,
-        isActive: isActive,
-        iconSvg: SVG_ICONS.dawn,
-        verdict: day.goldenMorning.text,
-        cond: `${day.goldenMorning.clouds ? day.goldenMorning.clouds.total : 0}% samlet skyer`,
-        wind: `${day.fog.avgWind} m/s`,
-        azimuth: day.sunriseAzimuth !== null ? `${Math.round(day.sunriseAzimuth)}° ${AstroCalc.getCompassDirection(day.sunriseAzimuth)}` : 'Øst',
-        calSummary: `📸 FotoVejr: Daggry & Gylden Time (${locName})`,
-        calDesc: `Morgenlys-kvalitet: ${mScore}%\nSolopgang kl. ${AstroCalc.formatTime(day.sun.sunrise)}\nAzimut: ${day.sunriseAzimuth !== null ? Math.round(day.sunriseAzimuth) + '°' : 'Øst'}`
-      });
-    }
-
-    // 3. Solnedgang & Aftenlys
-    if (day.sun.sunset) {
-      const eStart = (day.sun.goldenHourEvening && day.sun.goldenHourEvening.start) || new Date(day.sun.sunset.getTime() - 45 * 60 * 1000);
-      const eEnd = (day.sun.blueHourEvening && day.sun.blueHourEvening.end) || new Date(day.sun.sunset.getTime() + 45 * 60 * 1000);
-      const eScore = day.goldenEvening.score || 0;
-      const isPassed = isToday && now > eEnd;
-      const isActive = isToday && now >= eStart && now <= eEnd;
-      const eveWind = day.hourly && day.hourly[day.sun.sunset.getHours()] ? day.hourly[day.sun.sunset.getHours()].windSpeed.toFixed(1) : '2.0';
-      candidates.push({
-        type: 'evening',
-        title: 'Solnedgang & Aftenlys',
-        sub: 'Gylden time efterfulgt af blå time',
-        score: eScore,
-        start: eStart,
-        end: eEnd,
-        isPassed: isPassed,
-        isActive: isActive,
-        iconSvg: SVG_ICONS.sunset,
-        verdict: day.goldenEvening.text,
-        cond: `${day.goldenEvening.clouds ? day.goldenEvening.clouds.total : 0}% samlet skyer`,
-        wind: `${eveWind} m/s`,
-        azimuth: day.sunsetAzimuth !== null ? `${Math.round(day.sunsetAzimuth)}° ${AstroCalc.getCompassDirection(day.sunsetAzimuth)}` : 'Vest',
-        calSummary: `📸 FotoVejr: Solnedgang & Aftenlys (${locName})`,
-        calDesc: `Aftenlys-kvalitet: ${eScore}%\nSolnedgang kl. ${AstroCalc.formatTime(day.sun.sunset)}\nAzimut: ${day.sunsetAzimuth !== null ? Math.round(day.sunsetAzimuth) + '°' : 'Vest'}`
-      });
-    }
-
-    // 4. Stjernehimmel / Astro
-    if (day.sun.astronomicalDusk) {
-      const aStart = day.sun.astronomicalDusk;
-      const aEnd = day.sun.astronomicalDawn ? new Date(day.sun.astronomicalDawn.getTime() + 24 * 60 * 60 * 1000) : new Date(aStart.getTime() + 8 * 60 * 60 * 1000);
-      const aScore = day.astro.score || 0;
-      const isPassed = isToday && now > aEnd;
-      const isActive = isToday && now >= aStart && now <= aEnd;
-      candidates.push({
-        type: 'astro',
-        title: 'Stjernehimmel & Nat',
-        sub: 'Mælkevejen & dyb nat',
-        score: aScore,
-        start: aStart,
-        end: aEnd,
-        isPassed: isPassed,
-        isActive: isActive,
-        iconSvg: SVG_ICONS.astro,
-        verdict: day.astro.text,
-        cond: `${day.astro.avgClouds}% natskydække`,
-        wind: 'Klar nat',
-        azimuth: day.moonriseAzimuth !== null ? `Måne: ${Math.round(day.moonriseAzimuth)}°` : 'Syd',
-        calSummary: `📸 FotoVejr: Astronomisk Stjernehimmel (${locName})`,
-        calDesc: `Stjerneklar kvalitet: ${aScore}%\nAstronomisk mørke: ${day.astro.astroStart} – ${day.astro.astroEnd}\nNatskydække: ${day.astro.avgClouds}%`
-      });
-    }
-
-    if (candidates.length === 0) return;
-
-    let best = null;
-    if (isToday) {
-      const activeCandidates = candidates.filter(c => c.isActive);
-      if (activeCandidates.length > 0) {
-        activeCandidates.sort((a, b) => b.score - a.score);
-        best = activeCandidates[0];
-      } else {
-        const upcomingCandidates = candidates.filter(c => !c.isPassed);
-        if (upcomingCandidates.length > 0) {
-          upcomingCandidates.sort((a, b) => b.score - a.score);
-          best = upcomingCandidates[0];
-        } else {
-          candidates.sort((a, b) => b.score - a.score);
-          best = candidates[0];
-        }
-      }
-    } else {
-      candidates.sort((a, b) => b.score - a.score);
-      best = candidates[0];
-    }
-
-    el.heroIconWrap.innerHTML = best.iconSvg;
-    el.heroEventTitle.textContent = best.title;
-    el.heroEventSub.textContent = best.sub;
-
-    el.heroScoreBadge.textContent = `${best.score}/100`;
-    el.heroScoreBadge.className = `hero-score-badge ${best.score >= 70 ? 'high' : best.score >= 45 ? 'moderate' : 'low'}`;
-
-    const timeStartStr = AstroCalc.formatTime(best.start);
-    const timeEndStr = AstroCalc.formatTime(best.end);
-    el.heroTimeWindow.textContent = `${timeStartStr} – ${timeEndStr}`;
-
-    if (isToday) {
-      if (best.isActive) {
-        el.heroTimeRelative.textContent = '● Aktiv lige nu';
-        el.heroTimeRelative.style.color = '#10b981';
-      } else if (best.isPassed) {
-        el.heroTimeRelative.textContent = 'Passeret tidligere i dag';
-        el.heroTimeRelative.style.color = 'var(--text-muted)';
-      } else {
-        const msUntil = Math.max(0, best.start.getTime() - now.getTime());
-        el.heroTimeRelative.textContent = `Starter om ${formatDuration(msUntil)}`;
-        el.heroTimeRelative.style.color = 'var(--golden-primary)';
-      }
-    } else if (state.selectedDayIndex === 1) {
-      el.heroTimeRelative.textContent = `I morgen kl. ${timeStartStr}`;
-      el.heroTimeRelative.style.color = 'var(--golden-primary)';
-    } else {
-      const dayNames = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
-      el.heroTimeRelative.textContent = `${dayNames[day.date.getDay()]} kl. ${timeStartStr}`;
-      el.heroTimeRelative.style.color = 'var(--golden-primary)';
-    }
-
-    el.heroVerdictText.textContent = best.verdict;
-    el.heroSpecCond.textContent = best.cond;
-    el.heroSpecWind.textContent = best.wind;
-    el.heroSpecAzimuth.textContent = best.azimuth;
-
-    currentHeroCalendarPayload = {
-      title: best.calSummary,
-      description: best.calDesc,
-      location: locName,
-      start: best.start,
-      end: best.end,
-      alarmMinutes: 45
-    };
-  }
-
   // Render det aktuelt valgte døgn på fotokortene
   function renderSelectedDay() {
     const day = state.parsedDays[state.selectedDayIndex];
     if (!day) return;
 
     updateSelectedDayBanner(day);
-    renderHeroShotCall(day);
     renderFogCard(day);
     renderMorningCard(day);
     renderEveningCard(day);
@@ -1497,15 +1293,6 @@
       const isOpen = el.hourlyContent.classList.toggle('open');
       el.btnToggleHourly.classList.toggle('open', isOpen);
     });
-
-    // Hero Shot Call Kalender Export
-    if (el.btnHeroCalendar) {
-      el.btnHeroCalendar.addEventListener('click', () => {
-        if (currentHeroCalendarPayload) {
-          downloadCalendarEvent(currentHeroCalendarPayload);
-        }
-      });
-    }
 
     // Kort-specifikke kalenderknapper
     if (el.btnCalFog) {

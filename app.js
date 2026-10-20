@@ -1,27 +1,23 @@
 /**
- * app.js - UI logik, GPS, stedsøgning, favoritter, dagsvælger og nattilstand for Clear or Foggy PWA
+ * app.js - UI logik, automatisk GPS-lokation, stedsøgning, dagsvælger og nattilstand for FotoVejr PWA
  */
 
 (function () {
   'use strict';
 
-  // Forudindstillede danske fotospots hvis brugeren ikke har gemt nogen
-  const DEFAULT_SPOTS = [
-    { name: 'København', lat: 55.6761, lng: 12.5683 },
-    { name: 'Møns Klint', lat: 54.9647, lng: 12.5511 },
-    { name: 'Skagen Grenen', lat: 57.7428, lng: 10.6447 },
-    { name: 'Silkeborg Søerne', lat: 56.1697, lng: 9.5517 },
-    { name: 'Bornholm Hammeren', lat: 55.2833, lng: 14.7667 },
-    { name: 'Vadehavet Ribe', lat: 55.3283, lng: 8.7628 }
-  ];
-
   // App tilstand
   let state = {
-    currentLoc: { name: 'København', lat: 55.6761, lng: 12.5683, isGps: false },
+    currentLoc: {
+      name: 'Søger GPS...',
+      sub: '',
+      lat: 55.6761,
+      lng: 12.5683,
+      isGps: false,
+      accuracy: null
+    },
     selectedDayIndex: 0,
     forecastData: null,
     parsedDays: [],
-    favorites: [],
     isNightRed: false,
     searchDebounceTimer: null
   };
@@ -34,15 +30,13 @@
     btnRefresh: document.getElementById('btnRefresh'),
     btnGps: document.getElementById('btnGps'),
     btnSearchOpen: document.getElementById('btnSearchOpen'),
-    btnFavoriteToggle: document.getElementById('btnFavoriteToggle'),
-    favStarIcon: document.getElementById('favStarIcon'),
+    locationPinIcon: document.getElementById('locationPinIcon'),
     locName: document.getElementById('locName'),
     locCoords: document.getElementById('locCoords'),
     locationCurrentWrap: document.getElementById('locationCurrentWrap'),
     searchDropdown: document.getElementById('searchDropdown'),
     searchInput: document.getElementById('searchInput'),
     searchResults: document.getElementById('searchResults'),
-    favoritesBar: document.getElementById('favoritesBar'),
     statusBanner: document.getElementById('statusBanner'),
     statusBannerText: document.getElementById('statusBannerText'),
     statusBannerTime: document.getElementById('statusBannerTime'),
@@ -116,11 +110,10 @@
   async function init() {
     registerServiceWorker();
     loadPreferences();
-    renderFavoritesBar();
     setupEventListeners();
 
-    // Hent vejr for den gemte lokation
-    await updateWeather(false);
+    // Hent automatisk aktuel GPS-placering
+    await acquireGpsLocation(false);
   }
 
   // Registrering af Service Worker til PWA og offline
@@ -140,7 +133,6 @@
 
   // Henter brugerindstillinger fra localStorage
   function loadPreferences() {
-    // Nattilstand
     const savedNight = localStorage.getItem('photo_night_red') === 'true';
     if (savedNight) {
       state.isNightRed = true;
@@ -148,67 +140,119 @@
       el.btnNightMode.classList.add('active-red');
     }
 
-    // Favoritter
     try {
-      const savedFavs = localStorage.getItem('photo_favorites');
-      if (savedFavs) {
-        state.favorites = JSON.parse(savedFavs);
-      } else {
-        state.favorites = DEFAULT_SPOTS;
-        localStorage.setItem('photo_favorites', JSON.stringify(DEFAULT_SPOTS));
-      }
-    } catch (e) {
-      state.favorites = DEFAULT_SPOTS;
-    }
-
-    // Sidst valgte lokation
-    try {
-      const savedLoc = localStorage.getItem('photo_current_loc');
+      const savedLoc = localStorage.getItem('photo_last_gps_loc');
       if (savedLoc) {
         state.currentLoc = JSON.parse(savedLoc);
+        updateLocationDisplay();
       }
     } catch (e) {}
-
-    updateLocationDisplay();
-    updateFavoriteStar();
   }
 
   // Opdater visning af nuværende lokation
   function updateLocationDisplay() {
-    el.locName.textContent = state.currentLoc.name;
-    const latStr = Math.abs(state.currentLoc.lat).toFixed(2) + '°' + (state.currentLoc.lat >= 0 ? 'N' : 'S');
-    const lngStr = Math.abs(state.currentLoc.lng).toFixed(2) + '°' + (state.currentLoc.lng >= 0 ? 'Ø' : 'V');
-    el.locCoords.textContent = `${latStr}, ${lngStr}${state.currentLoc.isGps ? ' (GPS)' : ''}`;
+    el.locName.textContent = state.currentLoc.name || 'Aktuel position';
+    const latStr = Math.abs(state.currentLoc.lat).toFixed(3) + '°' + (state.currentLoc.lat >= 0 ? 'N' : 'S');
+    const lngStr = Math.abs(state.currentLoc.lng).toFixed(3) + '°' + (state.currentLoc.lng >= 0 ? 'Ø' : 'V');
+
+    if (state.currentLoc.isGps) {
+      if (el.locationPinIcon) el.locationPinIcon.classList.add('gps-locked');
+      const accText = state.currentLoc.accuracy ? ` (±${state.currentLoc.accuracy}m)` : '';
+      const subText = state.currentLoc.sub ? `${state.currentLoc.sub} • ` : '';
+      el.locCoords.innerHTML = `<span class="gps-badge-active">● GPS aktiv</span> • ${escapeHtml(subText)}${latStr}, ${lngStr}${accText}`;
+    } else {
+      if (el.locationPinIcon) el.locationPinIcon.classList.remove('gps-locked');
+      const subText = state.currentLoc.sub ? `${state.currentLoc.sub} • ` : '';
+      el.locCoords.textContent = `${subText}${latStr}, ${lngStr}`;
+    }
   }
 
-  // Opdaterer favoritstjerne i header
-  function updateFavoriteStar() {
-    const isFav = state.favorites.some(
-      (f) => Math.abs(f.lat - state.currentLoc.lat) < 0.02 && Math.abs(f.lng - state.currentLoc.lng) < 0.02
+  // Henter GPS lokation og foretager Reverse Geocoding
+  async function acquireGpsLocation(isManualClick = false) {
+    if (!navigator.geolocation) {
+      if (isManualClick) alert('GPS understøttes ikke af denne browser.');
+      await fallbackToStoredOrCph('GPS understøttes ikke af din browser.');
+      return;
+    }
+
+    if (isManualClick) {
+      showLoading(true, 'Opdaterer GPS position...');
+    }
+
+    el.locName.textContent = 'Finder aktuel GPS-position...';
+    el.locCoords.textContent = 'Søger GPS satellitter...';
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+
+        el.locName.textContent = 'Navngiver lokation...';
+        let geoInfo = { name: 'Aktuel position', sub: '' };
+        try {
+          geoInfo = await WeatherEngine.reverseGeocode(lat, lng);
+        } catch (e) {
+          console.warn('Reverse geocode fejlede:', e);
+        }
+
+        const placeName = geoInfo.name || 'Aktuel position';
+        const placeSub = geoInfo.sub || '';
+
+        state.currentLoc = {
+          name: placeName,
+          sub: placeSub,
+          lat: lat,
+          lng: lng,
+          accuracy: accuracy,
+          isGps: true,
+          updatedTime: new Date()
+        };
+
+        try {
+          localStorage.setItem('photo_last_gps_loc', JSON.stringify(state.currentLoc));
+        } catch (e) {}
+
+        updateLocationDisplay();
+        await updateWeather(true);
+      },
+      async (err) => {
+        console.warn('GPS fejl eller adgang nægtet:', err);
+        const msg = isManualClick ? 'GPS kunne ikke tilgås. Kontroller at lokationstilladelse er slået til.' : null;
+        await fallbackToStoredOrCph(msg);
+      },
+      { timeout: 10000, enableHighAccuracy: true, maximumAge: 60000 }
     );
-    el.favStarIcon.textContent = isFav ? '★' : '☆';
-    el.favStarIcon.style.color = isFav ? 'var(--golden-primary)' : 'inherit';
   }
 
-  // Render favorit-spots som klikbare chips
-  function renderFavoritesBar() {
-    el.favoritesBar.innerHTML = '';
-    state.favorites.forEach((spot) => {
-      const chip = document.createElement('button');
-      chip.className = 'fav-chip';
-      const isSelected = Math.abs(spot.lat - state.currentLoc.lat) < 0.02 && Math.abs(spot.lng - state.currentLoc.lng) < 0.02;
-      if (isSelected) chip.classList.add('active');
-      chip.innerHTML = `<span>📍</span> ${escapeHtml(spot.name)}`;
+  async function fallbackToStoredOrCph(alertMsg) {
+    showLoading(false);
+    if (alertMsg) alert(alertMsg);
 
-      chip.addEventListener('click', () => {
-        selectLocation(spot.name, spot.lat, spot.lng, false);
-      });
+    try {
+      const saved = localStorage.getItem('photo_last_gps_loc');
+      if (saved) {
+        state.currentLoc = JSON.parse(saved);
+        updateLocationDisplay();
+        await updateWeather(false);
+        return;
+      }
+    } catch (e) {}
 
-      el.favoritesBar.appendChild(chip);
-    });
+    // Standard København hvis ingen GPS endnu
+    state.currentLoc = {
+      name: 'København',
+      sub: 'Standard (tryk "Opdater GPS")',
+      lat: 55.6761,
+      lng: 12.5683,
+      isGps: false,
+      accuracy: null
+    };
+    updateLocationDisplay();
+    await updateWeather(false);
   }
 
-  // Henter vejrdata og opdaterer hele interfacet
+  // Henter vejrdata og opdaterer interfacet
   async function updateWeather(forceRefresh = false) {
     showLoading(true, 'Henter vejrdata for ' + state.currentLoc.name + '...');
 
@@ -242,7 +286,6 @@
         el.statusBanner.classList.remove('active');
       }
 
-      // Render 7-dages overblikket og det valgte døgn
       renderDaysBar();
       renderSelectedDay();
 
@@ -274,7 +317,6 @@
 
       const dateStr = d.getDate() + '. ' + monthNames[d.getMonth()];
 
-      // Badges ikoner (tåge, astro, gylden, fuldmåne)
       let badgeHtml = '';
       if (dayData.badges && dayData.badges.length > 0) {
         badgeHtml = dayData.badges.map(b => `<span class="day-badge-dot" title="${b.text}">${b.icon}</span>`).join('');
@@ -308,22 +350,11 @@
     const day = state.parsedDays[state.selectedDayIndex];
     if (!day) return;
 
-    // --- 1. TÅGE-KORT ---
     renderFogCard(day);
-
-    // --- 2. MORGEN-KORT (Gylden & Blå time) ---
     renderMorningCard(day);
-
-    // --- 3. AFTEN-KORT (Gylden & Blå time) ---
     renderEveningCard(day);
-
-    // --- 4. ASTRO / STJERNEKLART-KORT ---
     renderAstroCard(day);
-
-    // --- 5. MÅNE-KORT ---
     renderMoonCard(day);
-
-    // --- 6. TIME-FOR-TIME TABEL ---
     renderHourlyTable(day.hourly);
   }
 
@@ -334,7 +365,6 @@
     el.fogBadge.className = `score-badge ${fog.classType}`;
     el.fogAssessment.textContent = fog.text;
 
-    // Tidsvindue: ca. 1 time før solopgang til 1 time efter
     if (day.sun.sunrise) {
       const sunriseH = day.sun.sunrise.getHours();
       const sunriseM = day.sun.sunrise.getMinutes();
@@ -359,21 +389,18 @@
     el.morningBadge.textContent = `${g.icon} ${g.score}% kvalitet`;
     el.morningAssessment.textContent = g.text;
 
-    // Blå time morgen
     if (sun.blueHourMorning.start && sun.blueHourMorning.end) {
       el.morningBlueTime.textContent = `${AstroCalc.formatTime(sun.blueHourMorning.start)} – ${AstroCalc.formatTime(sun.blueHourMorning.end)}`;
     } else {
       el.morningBlueTime.textContent = '--:--';
     }
 
-    // Gylden time morgen
     if (sun.goldenHourMorning.start && sun.goldenHourMorning.end) {
       el.morningGoldenTime.textContent = `${AstroCalc.formatTime(sun.goldenHourMorning.start)} – ${AstroCalc.formatTime(sun.goldenHourMorning.end)}`;
     } else {
       el.morningGoldenTime.textContent = '--:--';
     }
 
-    // Solopgang & Azimut kompas
     if (sun.sunrise) {
       const az = day.sunriseAzimuth !== null ? Math.round(day.sunriseAzimuth) : null;
       const compDir = az !== null ? AstroCalc.getCompassDirection(az) : 'Øst';
@@ -385,7 +412,6 @@
       el.morningGoldenCompass.textContent = 'Øst';
     }
 
-    // Skylag
     if (g.clouds) {
       el.morningTotalClouds.textContent = `${g.clouds.total}%`;
       el.morningValLow.textContent = `${g.clouds.low}%`;
@@ -405,21 +431,18 @@
     el.eveningBadge.textContent = `${g.icon} ${g.score}% kvalitet`;
     el.eveningAssessment.textContent = g.text;
 
-    // Gylden time aften
     if (sun.goldenHourEvening.start && sun.goldenHourEvening.end) {
       el.eveningGoldenTime.textContent = `${AstroCalc.formatTime(sun.goldenHourEvening.start)} – ${AstroCalc.formatTime(sun.goldenHourEvening.end)}`;
     } else {
       el.eveningGoldenTime.textContent = '--:--';
     }
 
-    // Blå time aften
     if (sun.blueHourEvening.start && sun.blueHourEvening.end) {
       el.eveningBlueTime.textContent = `${AstroCalc.formatTime(sun.blueHourEvening.start)} – ${AstroCalc.formatTime(sun.blueHourEvening.end)}`;
     } else {
       el.eveningBlueTime.textContent = '--:--';
     }
 
-    // Solnedgang & Azimut kompas
     if (sun.sunset) {
       const az = day.sunsetAzimuth !== null ? Math.round(day.sunsetAzimuth) : null;
       const compDir = az !== null ? AstroCalc.getCompassDirection(az) : 'Vest';
@@ -431,7 +454,6 @@
       el.eveningGoldenCompass.textContent = 'Vest';
     }
 
-    // Skylag
     if (g.clouds) {
       el.eveningTotalClouds.textContent = `${g.clouds.total}%`;
       el.eveningValLow.textContent = `${g.clouds.low}%`;
@@ -470,7 +492,6 @@
     el.moonIllumSubtitle.textContent = `${moon.fraction}% oplyst flade`;
     el.moonBadge.textContent = `${moon.icon} ${moon.name}`;
 
-    // Måneopgang
     if (mt.rise) {
       el.moonriseTime.textContent = AstroCalc.formatTime(mt.rise);
       const az = day.moonriseAzimuth !== null ? Math.round(day.moonriseAzimuth) : null;
@@ -480,7 +501,6 @@
       el.moonriseCompass.textContent = '--';
     }
 
-    // Månenedgang
     if (mt.set) {
       el.moonsetTime.textContent = AstroCalc.formatTime(mt.set);
       const az = day.moonsetAzimuth !== null ? Math.round(day.moonsetAzimuth) : null;
@@ -500,10 +520,9 @@
       const tr = document.createElement('tr');
       const wDesc = WeatherEngine.getWeatherCodeDescription(h.weatherCode);
 
-      // Fremhæv timer med tåge eller god sigt
       let rowStyle = '';
       if (h.spread <= 1.0 && h.humidity >= 92) {
-        rowStyle = 'background: rgba(148, 163, 184, 0.12);'; // Tåge-farve
+        rowStyle = 'background: rgba(148, 163, 184, 0.12);';
       }
 
       tr.setAttribute('style', rowStyle);
@@ -523,61 +542,19 @@
     });
   }
 
-  // Lokationsskift
-  function selectLocation(name, lat, lng, isGps = false) {
-    state.currentLoc = { name, lat, lng, isGps };
-    localStorage.setItem('photo_current_loc', JSON.stringify(state.currentLoc));
+  // Manuelt lokationsvalg fra søgning
+  function selectCustomLocation(name, sub, lat, lng) {
+    state.currentLoc = {
+      name: name,
+      sub: sub || '',
+      lat: lat,
+      lng: lng,
+      isGps: false,
+      accuracy: null
+    };
     updateLocationDisplay();
-    updateFavoriteStar();
-    renderFavoritesBar();
     closeSearch();
     updateWeather(true);
-  }
-
-  // GPS lokalisering
-  function handleGpsClick() {
-    if (!navigator.geolocation) {
-      alert('GPS understøttes ikke af din browser.');
-      return;
-    }
-
-    showLoading(true, 'Finder din aktuelle position...');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        selectLocation('Min position (GPS)', lat, lng, true);
-      },
-      (err) => {
-        showLoading(false);
-        console.warn('GPS fejl:', err);
-        alert('Kunne ikke hente din GPS-position. Tjek at lokationsadgang er tilladt.');
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  }
-
-  // Favorit stjerne klik
-  function handleFavoriteToggle() {
-    const existingIndex = state.favorites.findIndex(
-      (f) => Math.abs(f.lat - state.currentLoc.lat) < 0.02 && Math.abs(f.lng - state.currentLoc.lng) < 0.02
-    );
-
-    if (existingIndex !== -1) {
-      // Fjern fra favoritter
-      state.favorites.splice(existingIndex, 1);
-    } else {
-      // Tilføj
-      state.favorites.push({
-        name: state.currentLoc.name,
-        lat: state.currentLoc.lat,
-        lng: state.currentLoc.lng
-      });
-    }
-
-    localStorage.setItem('photo_favorites', JSON.stringify(state.favorites));
-    updateFavoriteStar();
-    renderFavoritesBar();
   }
 
   // Søgning i Open-Meteo geocoding
@@ -612,8 +589,7 @@
         <span class="search-item-geo">${escapeHtml(sub)}</span>
       `;
       row.addEventListener('click', () => {
-        const displayName = item.name + (item.admin1 ? ' (' + item.admin1 + ')' : '');
-        selectLocation(displayName, item.lat, item.lng, false);
+        selectCustomLocation(item.name, sub, item.lat, item.lng);
       });
       el.searchResults.appendChild(row);
     });
@@ -640,17 +616,11 @@
 
   // Event Listeners opsætning
   function setupEventListeners() {
-    // Nattilstand
     el.btnNightMode.addEventListener('click', handleNightModeToggle);
-
-    // Refresh
     el.btnRefresh.addEventListener('click', () => updateWeather(true));
 
-    // GPS
-    el.btnGps.addEventListener('click', handleGpsClick);
-
-    // Favorit
-    el.btnFavoriteToggle.addEventListener('click', handleFavoriteToggle);
+    // Manuelt tryk på "Opdater GPS"
+    el.btnGps.addEventListener('click', () => acquireGpsLocation(true));
 
     // Søgebjælke
     el.btnSearchOpen.addEventListener('click', () => {
@@ -660,7 +630,6 @@
     el.locationCurrentWrap.addEventListener('click', openSearch);
     el.searchInput.addEventListener('input', handleSearchInput);
 
-    // Luk søgning ved klik udenfor
     document.addEventListener('click', (e) => {
       if (!el.searchDropdown.contains(e.target) &&
           !el.btnSearchOpen.contains(e.target) &&
@@ -669,7 +638,6 @@
       }
     });
 
-    // Accordion fold-ud
     el.btnToggleHourly.addEventListener('click', () => {
       const isOpen = el.hourlyContent.classList.toggle('open');
       el.btnToggleHourly.classList.toggle('open', isOpen);
@@ -697,7 +665,6 @@
     });
   }
 
-  // Start appen når DOM er klar
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

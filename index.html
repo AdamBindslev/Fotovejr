@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0d1117">
-  <meta name="description" content="Specialiseret vejr til fotografer: Gylden time, blå time, morgentåge, fuldmåne og stjerneklart.">
+  <meta name="description" content="FotoVejr – Fotografiske Signaler: Gylden time, blå time, morgentåge, fuldmåne og stjerneklart.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Clear or Foggy">
+  <meta name="apple-mobile-web-app-title" content="FotoVejr">
 
-  <title>Clear or Foggy – Fotografens Vejrguide</title>
+  <title>FotoVejr – Fotografiske Signaler</title>
 
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
@@ -30,10 +30,10 @@
     <header class="app-header">
       <div class="header-top">
         <div class="brand">
-          <img src="icon.svg" alt="Clear or Foggy Logo" class="brand-icon astro-native">
+          <img src="icon.svg" alt="FotoVejr Logo" class="brand-icon astro-native">
           <div class="brand-title">
-            <h1>Clear or Foggy</h1>
-            <span>Fotografens Vejrguide</span>
+            <h1>FotoVejr</h1>
+            <span>Fotografiske Signaler</span>
           </div>
         </div>
 
@@ -49,28 +49,24 @@
         </div>
       </div>
 
-      <!-- LOKATION & FAVORITTER -->
+      <!-- AKTUEL LOKATION -->
       <div class="location-bar">
-        <div class="location-current" id="locationCurrentWrap" title="Klik for at søge sted">
-          <span class="location-pin">📍</span>
+        <div class="location-current" id="locationCurrentWrap">
+          <span class="location-pin" id="locationPinIcon">📍</span>
           <div class="location-info">
-            <span class="location-name" id="locName">København</span>
-            <span class="location-status" id="locCoords">55.68°N, 12.57°Ø</span>
+            <span class="location-name" id="locName">Finder aktuel GPS-position...</span>
+            <span class="location-status" id="locCoords">Søger position...</span>
           </div>
         </div>
 
         <div class="location-btn-group">
           <!-- GPS knap -->
-          <button id="btnGps" class="location-sub-btn" title="Brug min aktuelle position">
-            <span>🎯</span> GPS
+          <button id="btnGps" class="location-sub-btn primary-gps" title="Opdater aktuel GPS position">
+            <span class="gps-pulse">🎯</span> Opdater GPS
           </button>
-          <!-- Søg knap -->
-          <button id="btnSearchOpen" class="location-sub-btn" title="Søg by eller fotospot">
-            <span>🔍</span> Søg
-          </button>
-          <!-- Favorit stjerne -->
-          <button id="btnFavoriteToggle" class="location-sub-btn" title="Gem som favoritspot">
-            <span id="favStarIcon">☆</span>
+          <!-- Søg knap (hvis fotografen vil tjekke et andet sted) -->
+          <button id="btnSearchOpen" class="location-sub-btn" title="Søg anden by">
+            <span>🔍</span>
           </button>
         </div>
 
@@ -78,17 +74,12 @@
         <div class="search-dropdown" id="searchDropdown">
           <div class="search-input-wrap">
             <span>🔍</span>
-            <input type="text" id="searchInput" placeholder="Søg by el. fotospot (f.eks. Møns Klint, Skagen, Silkeborg)..." autocomplete="off">
+            <input type="text" id="searchInput" placeholder="Søg anden by eller fotospot..." autocomplete="off">
           </div>
           <div class="search-results" id="searchResults">
             <!-- Dynamiske søgeresultater -->
           </div>
         </div>
-      </div>
-
-      <!-- Favorit-spots hurtigbjælke -->
-      <div class="favorites-bar" id="favoritesBar">
-        <!-- Genereres dynamisk i app.js -->
       </div>
     </header>
 
@@ -386,7 +377,7 @@
 
     <!-- FOOTER -->
     <footer class="app-footer">
-      <div>Clear or Foggy – PWA til fotografer</div>
+      <div>FotoVejr – Fotografiske Signaler</div>
       <div>Vejrdata: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> • Astronomi: SunCalc algoritme (offline)</div>
     </footer>
 

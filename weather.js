@@ -125,6 +125,48 @@
     });
   }
 
+  // Slå stednavn op ud fra GPS-koordinater (Reverse Geocoding)
+  async function reverseGeocode(lat, lng) {
+    try {
+      var bdcUrl = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' +
+        encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lng) + '&localityLanguage=da';
+      var res = await fetch(bdcUrl);
+      if (res.ok) {
+        var data = await res.json();
+        var loc = data.locality || data.city || '';
+        var sub = data.principalSubdivision || data.countryName || '';
+        if (loc) {
+          return {
+            name: loc,
+            sub: sub && sub !== loc ? sub : (data.countryName || '')
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('BigDataCloud reverse geocode fejl, prøver fallback:', e);
+    }
+
+    try {
+      var nomUrl = 'https://nominatim.openstreetmap.org/reverse?lat=' +
+        encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng) + '&format=json&accept-language=da';
+      var nomRes = await fetch(nomUrl);
+      if (nomRes.ok) {
+        var nomData = await nomRes.json();
+        var addr = nomData.address || {};
+        var localName = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city || addr.municipality || 'Aktuel position';
+        var county = addr.city || addr.municipality || addr.state || '';
+        return {
+          name: localName,
+          sub: county !== localName ? county : ''
+        };
+      }
+    } catch (e) {
+      console.warn('Nominatim reverse geocode fejl:', e);
+    }
+
+    return { name: 'Aktuel position', sub: '' };
+  }
+
   // Henter vejrdata for et givet døgn (0-6 indekseret)
   function parseDayData(weatherData, dayIndex, lat, lng) {
     if (!weatherData || !weatherData.daily || !weatherData.daily.time[dayIndex]) return null;
@@ -495,6 +537,7 @@
   return {
     fetchForecast: fetchForecast,
     searchLocation: searchLocation,
+    reverseGeocode: reverseGeocode,
     parseDayData: parseDayData,
     getWeatherCodeDescription: getWeatherCodeDescription
   };

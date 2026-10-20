@@ -1,12 +1,12 @@
 {
-  "name": "Clear or Foggy – Fotografens Vejr",
-  "short_name": "Fotovejr",
-  "description": "Specialiseret vejr og fototider: Gylden time, blå time, morgentåge, fuldmåne og stjerneklar nat.",
+  "name": "FotoVejr – Fotografiske Signaler",
+  "short_name": "FotoVejr",
+  "description": "Fotografiske Signaler: Gylden time, blå time, morgentåge, fuldmåne og stjerneklart baseret på din aktuelle GPS-position.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0a0c10",
+  "background_color": "#0a0d14",
   "theme_color": "#0d1117",
   "icons": [
     {

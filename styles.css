@@ -265,10 +265,35 @@ body {
   transition: all 0.15s;
 }
 
-.location-sub-btn:hover,
-.location-sub-btn:active {
-  color: var(--text-main);
-  border-color: var(--border-highlight);
+.location-sub-btn.primary-gps {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--golden-primary);
+  border-color: rgba(245, 158, 11, 0.4);
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+.location-sub-btn.primary-gps:active {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.gps-pulse {
+  display: inline-block;
+  animation: pulseGps 2s infinite ease-in-out;
+}
+
+@keyframes pulseGps {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.location-pin.gps-locked {
+  color: #10b981;
+}
+
+.location-status .gps-badge-active {
+  color: #10b981;
+  font-weight: 600;
 }
 
 /* SØGE-MODAL / DROPDOWN */

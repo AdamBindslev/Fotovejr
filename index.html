@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0d1117">
-  <meta name="description" content="FotoVejr – Fotografiske Signaler: Gylden time, blå time, morgentåge, fuldmåne og stjerneklart.">
+  <meta name="theme-color" content="#07080a">
+  <meta name="description" content="FotoVejr – af Fotografiske Signaler: Gylden time, blå time, morgentåge, fuldmåne og stjerneklart.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FotoVejr">
 
-  <title>FotoVejr (Beta) – Fotografiske Signaler</title>
+  <title>FotoVejr – af Fotografiske Signaler</title>
 
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" href="icon-192.png">
@@ -26,63 +26,75 @@
 
   <div class="app-container">
 
-    <!-- HEADER -->
+    <!-- KOMPAKT EVF KAMERA-HEADER -->
     <header class="app-header">
-      <div class="header-top">
-        <div class="brand">
-          <img src="logo-fs.jpg" alt="Fotografiske Signaler" class="brand-logo-fs" width="46" height="46">
-          <div class="brand-text-block">
-            <img src="fotografiske-signaler-wordmark.png" alt="Fotografiske Signaler" class="brand-wordmark">
-            <div class="brand-subtext">
-              <span class="brand-badge-fotovejr">FOTOVEJR</span>
-              <span class="badge-beta" title="Beta – under løbende udvikling">BETA</span>
-              <span class="brand-tagline">Vejrsignaler for fotografer</span>
+      <div class="evf-topbar">
+        <!-- Brand -->
+        <div class="evf-brand">
+          <img src="logo-fs.jpg" alt="Fotografiske Signaler" class="evf-logo" width="32" height="32">
+          <div class="evf-brand-text">
+            <div class="evf-title-row">
+              <span class="evf-title">FOTOVEJR</span>
+              <span class="evf-badge-beta">PRO</span>
             </div>
+            <span class="evf-sub">af Fotografiske Signaler</span>
           </div>
         </div>
 
-        <div class="header-actions">
-          <!-- Rød Nattilstand toggle -->
-          <button id="btnNightMode" class="btn-icon" title="Rød Astro Nattilstand (bevarer nattesyn)" aria-label="Astro Nattilstand">
-            🔴
+        <!-- EVF Lokation Status -->
+        <div class="evf-status-pill" id="locationCurrentWrap" title="Klik for at søge anden by eller fotospot">
+          <span class="evf-reticle" id="locationPinIcon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="8"></circle>
+              <line x1="12" y1="2" x2="12" y2="6"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+              <line x1="2" y1="12" x2="6" y2="12"></line>
+              <line x1="18" y1="12" x2="22" y2="12"></line>
+            </svg>
+          </span>
+          <div class="evf-loc-info">
+            <span class="evf-loc-name" id="locName">Søger GPS...</span>
+            <span class="evf-loc-sub" id="locCoords">Finder koordinater...</span>
+          </div>
+        </div>
+
+        <!-- EVF Hurtigknapper -->
+        <div class="evf-controls">
+          <button id="btnGps" class="evf-btn" title="Opdater GPS-position i felten" aria-label="Opdater GPS">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path>
+            </svg>
           </button>
-          <!-- Opdater knap -->
-          <button id="btnRefresh" class="btn-icon" title="Opdater vejrdata" aria-label="Opdater">
-            🔄
+          <button id="btnSearchOpen" class="evf-btn" title="Søg by eller fotospot" aria-label="Søg">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          <button id="btnRefresh" class="evf-btn" title="Genindlæs vejrdata" aria-label="Opdater">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+          </button>
+          <button id="btnNightMode" class="evf-btn evf-night-btn" title="Rød Astro Nattilstand (bevarer nattesyn)" aria-label="Astro Nattilstand">
+            <span class="night-mode-dot"></span>
+            <span class="night-mode-label">ASTRO</span>
           </button>
         </div>
       </div>
 
-      <!-- AKTUEL LOKATION -->
-      <div class="location-bar">
-        <div class="location-current" id="locationCurrentWrap">
-          <span class="location-pin" id="locationPinIcon">📍</span>
-          <div class="location-info">
-            <span class="location-name" id="locName">Finder aktuel GPS-position...</span>
-            <span class="location-status" id="locCoords">Søger position...</span>
-          </div>
+      <!-- Søge dropdown modal -->
+      <div class="search-dropdown" id="searchDropdown">
+        <div class="search-input-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Søg by, naturområde eller fotospot..." autocomplete="off">
         </div>
-
-        <div class="location-btn-group">
-          <!-- GPS knap -->
-          <button id="btnGps" class="location-sub-btn primary-gps" title="Opdater aktuel GPS position">
-            <span class="gps-pulse">🎯</span> Opdater GPS
-          </button>
-          <!-- Søg knap (hvis fotografen vil tjekke et andet sted) -->
-          <button id="btnSearchOpen" class="location-sub-btn" title="Søg anden by">
-            <span>🔍</span>
-          </button>
-        </div>
-
-        <!-- Søge dropdown modal -->
-        <div class="search-dropdown" id="searchDropdown">
-          <div class="search-input-wrap">
-            <span>🔍</span>
-            <input type="text" id="searchInput" placeholder="Søg anden by eller fotospot..." autocomplete="off">
-          </div>
-          <div class="search-results" id="searchResults">
-            <!-- Dynamiske søgeresultater -->
-          </div>
+        <div class="search-results" id="searchResults">
+          <!-- Dynamiske søgeresultater -->
         </div>
       </div>
     </header>
@@ -95,13 +107,20 @@
 
     <!-- 7-DAGES HORISONTAL VÆLGER -->
     <section class="days-bar-container">
-      <div class="days-bar-label">Vælg dag (næste 7 dage)</div>
+      <div class="days-bar-label">Vælg dag (7-dages vejrradar)</div>
       <div class="days-scroll" id="daysScroll">
         <!-- 7 dag-chips genereres dynamisk i app.js -->
       </div>
-      <!-- Aktuelt valgt dag & næste fotobegivenhed -->
+      <!-- Aktuelt valgt dag & tidsstatus -->
       <div class="selected-day-banner" id="selectedDayBanner">
-        <span class="day-banner-calendar">📅</span>
+        <span class="day-banner-calendar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </span>
         <div class="day-banner-content">
           <span class="day-banner-title" id="dayBannerTitle">I dag</span>
           <span class="day-banner-subtitle" id="dayBannerSubtitle">Beregner fototider...</span>
@@ -109,14 +128,88 @@
       </div>
     </section>
 
-    <!-- FOKUS KORT: Dagens Fotomuligheder -->
+    <!-- HERO SHOT CALL: Dagens Primære Fotomulighed -->
+    <section class="hero-shot-call" id="heroShotCall">
+      <div class="hero-radar-badge">
+        <span class="radar-dot"></span>
+        <span class="hero-radar-label">HERO SHOT CALL • ANBEFALET FOTOVINDUE</span>
+      </div>
+
+      <div class="hero-main-row">
+        <div class="hero-event-info">
+          <div class="hero-icon-wrap" id="heroIconWrap">
+            <!-- Dynamic SVG icon -->
+          </div>
+          <div class="hero-titles">
+            <h2 class="hero-event-title" id="heroEventTitle">Beregner bedste fotovindue...</h2>
+            <div class="hero-event-sub" id="heroEventSub">Analyserer daggry, tåge, lys og skydække</div>
+          </div>
+        </div>
+        <div class="hero-score-badge" id="heroScoreBadge">--</div>
+      </div>
+
+      <div class="hero-timing-bar" id="heroTimingBar">
+        <span class="hero-time-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </span>
+        <span class="hero-time-window" id="heroTimeWindow">--:-- – --:--</span>
+        <span class="hero-time-relative" id="heroTimeRelative">Beregner...</span>
+      </div>
+
+      <p class="hero-verdict-text" id="heroVerdictText">
+        Analyserer de meteorologiske signaler for det optimale skud...
+      </p>
+
+      <div class="hero-specs-row" id="heroSpecsRow">
+        <div class="hero-spec-item">
+          <span class="hero-spec-label">Forhold</span>
+          <span class="hero-spec-val" id="heroSpecCond">--</span>
+        </div>
+        <div class="hero-spec-item">
+          <span class="hero-spec-label">Vind</span>
+          <span class="hero-spec-val" id="heroSpecWind">--</span>
+        </div>
+        <div class="hero-spec-item">
+          <span class="hero-spec-label">Azimut</span>
+          <span class="hero-spec-val" id="heroSpecAzimuth">--</span>
+        </div>
+      </div>
+
+      <div class="hero-action-row">
+        <button type="button" class="btn-cal-export" id="btnHeroCalendar" title="Tilføj denne fotobegivenhed til kalenderen med alarm">
+          <span class="btn-cal-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+              <line x1="12" y1="14" x2="12" y2="18"></line>
+              <line x1="10" y1="16" x2="14" y2="16"></line>
+            </svg>
+          </span>
+          <span>Føj til kalender (med 45 min. alarm)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- FOKUS KORT: Dagens Fotomuligheder (To-lags arkitektur) -->
     <main class="cards-grid" id="cardsGrid">
 
       <!-- 1. TÅGE & MORGENDIS -->
       <article class="photo-card card-fog" id="cardFog">
         <div class="card-header">
           <div class="card-title-group">
-            <span class="card-icon">🌫️</span>
+            <div class="card-icon-svg">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <line x1="3" y1="8" x2="21" y2="8"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <line x1="2" y1="16" x2="22" y2="16"></line>
+                <line x1="7" y1="20" x2="17" y2="20"></line>
+              </svg>
+            </div>
             <div class="card-title">
               <h3>Morgentåge & Dis</h3>
               <span class="card-subtitle">Strålingståge, enge & vandoverflader</span>
@@ -127,7 +220,12 @@
 
         <div class="card-timing-banner" id="fogTimingBanner">
           <div class="timing-banner-left">
-            <span class="timing-icon">🌫️</span>
+            <span class="timing-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="4" y1="15" x2="20" y2="15"></line>
+              </svg>
+            </span>
             <span class="timing-label" id="fogTimingLabel">Beregner tidspunkt...</span>
           </div>
           <span class="timing-banner-pill" id="fogTimingPill">--</span>
@@ -151,18 +249,37 @@
             </div>
           </div>
 
-          <div class="metrics-row">
-            <div class="metric-item">
-              <span class="metric-val" id="fogHumidity">96%</span>
-              <span class="metric-label">Luftfugtighed</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-val" id="fogWind">1.5 m/s</span>
-              <span class="metric-label">Vindhastighed</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-val" id="fogVisibility">&lt; 1.0 km</span>
-              <span class="metric-label">Min. sigtbarhed</span>
+          <div class="card-actions-row">
+            <button type="button" class="btn-cal-card" id="btnCalFog" title="Føj morgentåge til kalenderen">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Føj til kalender</span>
+            </button>
+            <button type="button" class="btn-toggle-deep-data" data-target="deepDataFog">
+              <span>Tekniske målinger</span>
+              <span class="deep-data-arrow">▼</span>
+            </button>
+          </div>
+
+          <!-- LAG 2: Meteorologiske Målinger (Fold-ud) -->
+          <div class="deep-data-drawer" id="deepDataFog">
+            <div class="metrics-row">
+              <div class="metric-item">
+                <span class="metric-val" id="fogHumidity">96%</span>
+                <span class="metric-label">Luftfugtighed</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-val" id="fogWind">1.5 m/s</span>
+                <span class="metric-label">Vindhastighed</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-val" id="fogVisibility">&lt; 1.0 km</span>
+                <span class="metric-label">Min. sigtbarhed</span>
+              </div>
             </div>
           </div>
 
@@ -174,18 +291,34 @@
       <article class="photo-card card-golden" id="cardMorning">
         <div class="card-header">
           <div class="card-title-group">
-            <span class="card-icon">🌅</span>
+            <div class="card-icon-svg">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v4"></path>
+                <path d="M4.93 7.93l2.83 2.83"></path>
+                <path d="M19.07 7.93l-2.83 2.83"></path>
+                <path d="M17 18a5 5 0 0 0-10 0"></path>
+                <line x1="2" y1="18" x2="22" y2="18"></line>
+                <line x1="12" y1="13" x2="12" y2="9"></line>
+                <polyline points="10 11 12 9 14 11"></polyline>
+              </svg>
+            </div>
             <div class="card-title">
               <h3>Daggry & Morgenlys</h3>
               <span class="card-subtitle">Blå time efterfulgt af gylden time</span>
             </div>
           </div>
-          <div class="score-badge high" id="morningBadge">🌅 Gylden time</div>
+          <div class="score-badge high" id="morningBadge">Gylden time</div>
         </div>
 
         <div class="card-timing-banner" id="morningTimingBanner">
           <div class="timing-banner-left">
-            <span class="timing-icon">🌅</span>
+            <span class="timing-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+              </svg>
+            </span>
             <span class="timing-label" id="morningTimingLabel">Beregner tidspunkt...</span>
           </div>
           <span class="timing-banner-pill" id="morningTimingPill">--</span>
@@ -215,22 +348,41 @@
             </div>
           </div>
 
-          <div class="cloud-breakdown-bar">
-            <div class="cloud-labels">
-              <span>Samlet skydække ved opgang: <strong id="morningTotalClouds">35%</strong></span>
-            </div>
-            <div class="cloud-layers-grid">
-              <div class="cloud-layer-col">
-                <span class="cloud-layer-label">Lave: <strong id="morningValLow">0%</strong></span>
-                <div class="cloud-track"><div class="cloud-fill bar-low" id="morningBarLow" style="width: 0%"></div></div>
+          <div class="card-actions-row">
+            <button type="button" class="btn-cal-card" id="btnCalMorning" title="Føj morgenlys til kalenderen">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Føj til kalender</span>
+            </button>
+            <button type="button" class="btn-toggle-deep-data" data-target="deepDataMorning">
+              <span>Sky-lagdeling</span>
+              <span class="deep-data-arrow">▼</span>
+            </button>
+          </div>
+
+          <!-- LAG 2: Sky-fordeling (Fold-ud) -->
+          <div class="deep-data-drawer" id="deepDataMorning">
+            <div class="cloud-breakdown-bar">
+              <div class="cloud-labels">
+                <span>Samlet skydække ved opgang: <strong id="morningTotalClouds">35%</strong></span>
               </div>
-              <div class="cloud-layer-col">
-                <span class="cloud-layer-label">Mellem: <strong id="morningValMid">0%</strong></span>
-                <div class="cloud-track"><div class="cloud-fill bar-mid" id="morningBarMid" style="width: 0%"></div></div>
-              </div>
-              <div class="cloud-layer-col">
-                <span class="cloud-layer-label">Høje: <strong id="morningValHigh">0%</strong></span>
-                <div class="cloud-track"><div class="cloud-fill bar-high" id="morningBarHigh" style="width: 0%"></div></div>
+              <div class="cloud-layers-grid">
+                <div class="cloud-layer-col">
+                  <span class="cloud-layer-label">Lave: <strong id="morningValLow">0%</strong></span>
+                  <div class="cloud-track"><div class="cloud-fill bar-low" id="morningBarLow" style="width: 0%"></div></div>
+                </div>
+                <div class="cloud-layer-col">
+                  <span class="cloud-layer-label">Mellem: <strong id="morningValMid">0%</strong></span>
+                  <div class="cloud-track"><div class="cloud-fill bar-mid" id="morningBarMid" style="width: 0%"></div></div>
+                </div>
+                <div class="cloud-layer-col">
+                  <span class="cloud-layer-label">Høje: <strong id="morningValHigh">0%</strong></span>
+                  <div class="cloud-track"><div class="cloud-fill bar-high" id="morningBarHigh" style="width: 0%"></div></div>
+                </div>
               </div>
             </div>
           </div>
@@ -243,18 +395,33 @@
       <article class="photo-card card-blue" id="cardEvening">
         <div class="card-header">
           <div class="card-title-group">
-            <span class="card-icon">🌆</span>
+            <div class="card-icon-svg">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 18a5 5 0 0 0-10 0"></path>
+                <line x1="2" y1="18" x2="22" y2="18"></line>
+                <path d="M4.93 10.93l2.83-2.83"></path>
+                <path d="M19.07 10.93l-2.83-2.83"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <polyline points="10 11 12 13 14 11"></polyline>
+              </svg>
+            </div>
             <div class="card-title">
               <h3>Solnedgang & Aftenlys</h3>
               <span class="card-subtitle">Gylden time efterfulgt af blå time</span>
             </div>
           </div>
-          <div class="score-badge high" id="eveningBadge">🔥 Flot solnedgang</div>
+          <div class="score-badge high" id="eveningBadge">Flot solnedgang</div>
         </div>
 
         <div class="card-timing-banner" id="eveningTimingBanner">
           <div class="timing-banner-left">
-            <span class="timing-icon">🌆</span>
+            <span class="timing-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+              </svg>
+            </span>
             <span class="timing-label" id="eveningTimingLabel">Beregner tidspunkt...</span>
           </div>
           <span class="timing-banner-pill" id="eveningTimingPill">--</span>
@@ -284,22 +451,41 @@
             </div>
           </div>
 
-          <div class="cloud-breakdown-bar">
-            <div class="cloud-labels">
-              <span>Samlet skydække ved nedgang: <strong id="eveningTotalClouds">40%</strong></span>
-            </div>
-            <div class="cloud-layers-grid">
-              <div class="cloud-layer-col">
-                <span class="cloud-layer-label">Lave: <strong id="eveningValLow">0%</strong></span>
-                <div class="cloud-track"><div class="cloud-fill bar-low" id="eveningBarLow" style="width: 0%"></div></div>
+          <div class="card-actions-row">
+            <button type="button" class="btn-cal-card" id="btnCalEvening" title="Føj aftenlys til kalenderen">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Føj til kalender</span>
+            </button>
+            <button type="button" class="btn-toggle-deep-data" data-target="deepDataEvening">
+              <span>Sky-lagdeling</span>
+              <span class="deep-data-arrow">▼</span>
+            </button>
+          </div>
+
+          <!-- LAG 2: Sky-fordeling (Fold-ud) -->
+          <div class="deep-data-drawer" id="deepDataEvening">
+            <div class="cloud-breakdown-bar">
+              <div class="cloud-labels">
+                <span>Samlet skydække ved nedgang: <strong id="eveningTotalClouds">40%</strong></span>
               </div>
-              <div class="cloud-layer-col">
-                <span class="cloud-layer-label">Mellem: <strong id="eveningValMid">0%</strong></span>
-                <div class="cloud-track"><div class="cloud-fill bar-mid" id="eveningBarMid" style="width: 0%"></div></div>
-              </div>
-              <div class="cloud-layer-col">
-                <span class="cloud-layer-label">Høje: <strong id="eveningValHigh">0%</strong></span>
-                <div class="cloud-track"><div class="cloud-fill bar-high" id="eveningBarHigh" style="width: 0%"></div></div>
+              <div class="cloud-layers-grid">
+                <div class="cloud-layer-col">
+                  <span class="cloud-layer-label">Lave: <strong id="eveningValLow">0%</strong></span>
+                  <div class="cloud-track"><div class="cloud-fill bar-low" id="eveningBarLow" style="width: 0%"></div></div>
+                </div>
+                <div class="cloud-layer-col">
+                  <span class="cloud-layer-label">Mellem: <strong id="eveningValMid">0%</strong></span>
+                  <div class="cloud-track"><div class="cloud-fill bar-mid" id="eveningBarMid" style="width: 0%"></div></div>
+                </div>
+                <div class="cloud-layer-col">
+                  <span class="cloud-layer-label">Høje: <strong id="eveningValHigh">0%</strong></span>
+                  <div class="cloud-track"><div class="cloud-fill bar-high" id="eveningBarHigh" style="width: 0%"></div></div>
+                </div>
               </div>
             </div>
           </div>
@@ -310,18 +496,26 @@
       <article class="photo-card card-astro" id="cardAstro">
         <div class="card-header">
           <div class="card-title-group">
-            <span class="card-icon">✨</span>
+            <div class="card-icon-svg">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
             <div class="card-title">
               <h3 id="astroTitle">Stjernehimmel & Nat</h3>
               <span class="card-subtitle">Mælkevejen, stjernebilleder & deep-sky</span>
             </div>
           </div>
-          <div class="score-badge" id="astroBadge">✨ Stjerneklar</div>
+          <div class="score-badge" id="astroBadge">Stjerneklar</div>
         </div>
 
         <div class="card-timing-banner" id="astroTimingBanner">
           <div class="timing-banner-left">
-            <span class="timing-icon">✨</span>
+            <span class="timing-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"></path>
+              </svg>
+            </span>
             <span class="timing-label" id="astroTimingLabel">Beregner tidspunkt...</span>
           </div>
           <span class="timing-banner-pill" id="astroTimingPill">--</span>
@@ -345,10 +539,29 @@
             </div>
           </div>
 
-          <div class="metrics-row">
-            <div class="metric-item">
-              <span class="metric-val" id="astroMoonImpact">Ingen forstyrrelse</span>
-              <span class="metric-label">Månelys-påvirkning</span>
+          <div class="card-actions-row">
+            <button type="button" class="btn-cal-card" id="btnCalAstro" title="Føj stjernehimmel til kalenderen">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Føj til kalender</span>
+            </button>
+            <button type="button" class="btn-toggle-deep-data" data-target="deepDataAstro">
+              <span>Månelys-påvirkning</span>
+              <span class="deep-data-arrow">▼</span>
+            </button>
+          </div>
+
+          <!-- LAG 2: Månelys (Fold-ud) -->
+          <div class="deep-data-drawer" id="deepDataAstro">
+            <div class="metrics-row">
+              <div class="metric-item">
+                <span class="metric-val" id="astroMoonImpact">Ingen forstyrrelse</span>
+                <span class="metric-label">Månelys-påvirkning på Mælkevejen</span>
+              </div>
             </div>
           </div>
         </div>
@@ -358,18 +571,26 @@
       <article class="photo-card card-moon" id="cardMoon">
         <div class="card-header">
           <div class="card-title-group">
-            <span class="card-icon" id="moonIconHeader">🌕</span>
+            <div class="card-icon-svg" id="moonIconHeader">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+              </svg>
+            </div>
             <div class="card-title">
               <h3 id="moonPhaseTitle">Fuldmåne</h3>
               <span class="card-subtitle" id="moonIllumSubtitle">100% belyst</span>
             </div>
           </div>
-          <div class="score-badge" id="moonBadge">🌕 Måne</div>
+          <div class="score-badge" id="moonBadge">Måne</div>
         </div>
 
         <div class="card-timing-banner" id="moonTimingBanner">
           <div class="timing-banner-left">
-            <span class="timing-icon">🌕</span>
+            <span class="timing-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="5"></circle>
+              </svg>
+            </span>
             <span class="timing-label" id="moonTimingLabel">Måneopgang & nedgang</span>
           </div>
           <span class="timing-banner-pill" id="moonTimingPill">I dag</span>
@@ -400,7 +621,14 @@
       <!-- FOLD-UD DETALJERET TIME-FOR-TIME OVERBLIK -->
       <section class="accordion-wrap">
         <button class="accordion-toggle" id="btnToggleHourly">
-          <span>📊 Se alle 24 timer (dugpunkt, skyer i lag, vind)</span>
+          <span class="accordion-label-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Se alle 24 timer (dugpunkt, 3-lags skyer, vind)</span>
+          </span>
           <span class="accordion-arrow">▼</span>
         </button>
 
@@ -431,15 +659,15 @@
 
     </main>
 
-    <!-- FOOTER -->
+    <!-- FOOTER: Ren, stilfuld modermærke-branding -->
     <footer class="app-footer">
       <div class="footer-brand-wrap">
         <a href="https://fotografiskesignaler.dk" target="_blank" rel="noopener" title="Besøg Fotografiske Signaler">
           <img src="fotografiske-signaler-wordmark.png" alt="Fotografiske Signaler" class="footer-wordmark">
         </a>
       </div>
-      <div class="footer-desc">FotoVejr <span class="badge-beta badge-beta-sm">BETA</span> – Et specialværktøj fra <a href="https://fotografiskesignaler.dk" target="_blank" rel="noopener">Fotografiske Signaler</a></div>
-      <div class="footer-meta">Work in progress • Vejrdata: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> • Astronomi: Offline ephemeris</div>
+      <div class="footer-desc">FotoVejr <span class="badge-beta badge-beta-sm">PRO</span> – Præcisionsværktøj af <a href="https://fotografiskesignaler.dk" target="_blank" rel="noopener">Fotografiske Signaler</a></div>
+      <div class="footer-meta">Vejrdata: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> • Offline Ephemeris astronomi</div>
     </footer>
 
   </div>

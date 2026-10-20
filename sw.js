@@ -3,7 +3,7 @@
  * Giver fuld offline-adgang i felten for fototider og seneste vejrdata.
  */
 
-const CACHE_NAME = 'fotovejr-fs-v6';
+const CACHE_NAME = 'fotovejr-fs-v7';
 const STATIC_ASSETS = [
   './',
   './index.html',

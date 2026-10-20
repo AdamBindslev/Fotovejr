@@ -45,6 +45,21 @@
     dayBannerTitle: document.getElementById('dayBannerTitle'),
     dayBannerSubtitle: document.getElementById('dayBannerSubtitle'),
 
+    // Hero Shot Call (Dagens vigtigste fotomulighed)
+    heroShotCall: document.getElementById('heroShotCall'),
+    heroIconWrap: document.getElementById('heroIconWrap'),
+    heroEventTitle: document.getElementById('heroEventTitle'),
+    heroEventSub: document.getElementById('heroEventSub'),
+    heroScoreBadge: document.getElementById('heroScoreBadge'),
+    heroTimingBar: document.getElementById('heroTimingBar'),
+    heroTimeWindow: document.getElementById('heroTimeWindow'),
+    heroTimeRelative: document.getElementById('heroTimeRelative'),
+    heroVerdictText: document.getElementById('heroVerdictText'),
+    heroSpecCond: document.getElementById('heroSpecCond'),
+    heroSpecWind: document.getElementById('heroSpecWind'),
+    heroSpecAzimuth: document.getElementById('heroSpecAzimuth'),
+    btnHeroCalendar: document.getElementById('btnHeroCalendar'),
+
     // Tåge
     cardFog: document.getElementById('cardFog'),
     fogBadge: document.getElementById('fogBadge'),
@@ -60,6 +75,7 @@
     fogHumidity: document.getElementById('fogHumidity'),
     fogWind: document.getElementById('fogWind'),
     fogVisibility: document.getElementById('fogVisibility'),
+    btnCalFog: document.getElementById('btnCalFog'),
 
     // Morgen
     cardMorning: document.getElementById('cardMorning'),
@@ -82,6 +98,7 @@
     morningBarLow: document.getElementById('morningBarLow'),
     morningBarMid: document.getElementById('morningBarMid'),
     morningBarHigh: document.getElementById('morningBarHigh'),
+    btnCalMorning: document.getElementById('btnCalMorning'),
 
     // Aften
     cardEvening: document.getElementById('cardEvening'),
@@ -103,6 +120,7 @@
     eveningBarLow: document.getElementById('eveningBarLow'),
     eveningBarMid: document.getElementById('eveningBarMid'),
     eveningBarHigh: document.getElementById('eveningBarHigh'),
+    btnCalEvening: document.getElementById('btnCalEvening'),
 
     // Astro
     cardAstro: document.getElementById('cardAstro'),
@@ -116,6 +134,7 @@
     astroClouds: document.getElementById('astroClouds'),
     astroCloudsSub: document.getElementById('astroCloudsSub'),
     astroMoonImpact: document.getElementById('astroMoonImpact'),
+    btnCalAstro: document.getElementById('btnCalAstro'),
 
     // Måne
     cardMoon: document.getElementById('cardMoon'),
@@ -138,6 +157,18 @@
     hourlyContent: document.getElementById('hourlyContent'),
     hourlyTableBody: document.getElementById('hourlyTableBody')
   };
+
+  // SVG Ikonbibliotek (1.5px Precision Stroke)
+  const SVG_ICONS = {
+    fog: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"></line><line x1="5" y1="12" x2="19" y2="12"></line><line x1="2" y1="16" x2="22" y2="16"></line><line x1="7" y1="20" x2="17" y2="20"></line></svg>`,
+    dawn: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v4"></path><path d="M4.93 7.93l2.83 2.83"></path><path d="M19.07 7.93l-2.83 2.83"></path><path d="M17 18a5 5 0 0 0-10 0"></path><line x1="2" y1="18" x2="22" y2="18"></line><line x1="12" y1="13" x2="12" y2="9"></line><polyline points="10 11 12 9 14 11"></polyline></svg>`,
+    sunset: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"></path><line x1="2" y1="18" x2="22" y2="18"></line><path d="M4.93 10.93l2.83-2.83"></path><path d="M19.07 10.93l-2.83-2.83"></path><line x1="12" y1="9" x2="12" y2="13"></line><polyline points="10 11 12 13 14 11"></polyline></svg>`,
+    astro: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+    moon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+  };
+
+  // Kalender payload for aktiv Hero Shot Call
+  let currentHeroCalendarPayload = null;
 
   // --- INITIALISERING ---
   async function init() {
@@ -693,9 +724,9 @@
 
       let badgeHtml = '';
       if (dayData.badges && dayData.badges.length > 0) {
-        badgeHtml = dayData.badges.map(b => `<span class="day-badge-dot" title="${b.text}">${b.icon}</span>`).join('');
+        badgeHtml = dayData.badges.map(b => `<span class="day-badge-dot type-${b.type}" title="${b.text}">●</span>`).join('');
       } else {
-        badgeHtml = `<span class="day-badge-dot" style="opacity: 0.3;">☀️</span>`;
+        badgeHtml = `<span class="day-badge-dot" style="opacity: 0.25;">○</span>`;
       }
 
       const tempStr = Math.round(dayData.tempMax) + '° / ' + Math.round(dayData.tempMin) + '°';
@@ -715,12 +746,254 @@
     });
   }
 
+  // --- KALENDER INTEGRATION (.ICS GENERATOR MED ALARM) ---
+  function downloadCalendarEvent({ title, description, location, start, end, alarmMinutes = 45 }) {
+    if (!start || !end) return;
+
+    function toIcsFormat(d) {
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const hours = String(d.getUTCHours()).padStart(2, '0');
+      const mins = String(d.getUTCMinutes()).padStart(2, '0');
+      const secs = String(d.getUTCSeconds()).padStart(2, '0');
+      return `${year}${month}${day}T${hours}${mins}${secs}Z`;
+    }
+
+    const nowStr = toIcsFormat(new Date());
+    const startStr = toIcsFormat(new Date(start));
+    const endStr = toIcsFormat(new Date(end));
+    const uid = 'fotovejr-' + Date.now() + '-' + Math.floor(Math.random() * 100000) + '@fotografiskesignaler.dk';
+
+    const icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Fotografiske Signaler//FotoVejr//DA',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${nowStr}`,
+      `DTSTART:${startStr}`,
+      `DTEND:${endStr}`,
+      `SUMMARY:${(title || 'FotoVejr Fotobegivenhed').replace(/[,;]/g, ' ')}`,
+      `DESCRIPTION:${(description || '').replace(/\n/g, '\\n')}`,
+      `LOCATION:${(location || '').replace(/[,;]/g, ' ')}`,
+      'STATUS:CONFIRMED',
+      'BEGIN:VALARM',
+      `TRIGGER:-PT${alarmMinutes}M`,
+      'ACTION:DISPLAY',
+      `DESCRIPTION:Påmindelse: ${title}`,
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ];
+
+    const icsData = icsLines.join('\r\n');
+    const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const cleanFileName = (title || 'fotovejr_event').toLowerCase().replace(/[^a-z0-9]/gi, '_');
+    a.setAttribute('download', `${cleanFileName}.ics`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  // --- HERO SHOT CALL (DAGENS MEST OPTIMALE FOTOVINDUE) ---
+  function renderHeroShotCall(day) {
+    if (!el.heroShotCall || !day) return;
+
+    const now = new Date();
+    const isToday = state.selectedDayIndex === 0;
+    const locName = state.currentLoc.name || 'Lokation';
+
+    const candidates = [];
+
+    // 1. Tågekandidat
+    if (day.sun.sunrise) {
+      const fogStart = new Date(day.sun.sunrise.getTime() - 60 * 60 * 1000);
+      const fogEnd = new Date(day.sun.sunrise.getTime() + 65 * 60 * 1000);
+      const fogScore = day.fog.score || 0;
+      const isPassed = isToday && now > fogEnd;
+      const isActive = isToday && now >= fogStart && now <= fogEnd;
+      candidates.push({
+        type: 'fog',
+        title: 'Morgentåge & Daggry',
+        sub: 'Strålingståge, søer & lavninger',
+        score: fogScore,
+        start: fogStart,
+        end: fogEnd,
+        isPassed: isPassed,
+        isActive: isActive,
+        iconSvg: SVG_ICONS.fog,
+        verdict: day.fog.text,
+        cond: `${day.fog.avgSpread}°C dugpunktsdiff.`,
+        wind: `${day.fog.avgWind} m/s`,
+        azimuth: day.sunriseAzimuth !== null ? `${Math.round(day.sunriseAzimuth)}° ${AstroCalc.getCompassDirection(day.sunriseAzimuth)}` : 'Øst',
+        calSummary: `📸 FotoVejr: Morgentåge & Daggry (${locName})`,
+        calDesc: `Morgentåge-indeks: ${fogScore}%\nTidsvindue: ${AstroCalc.formatTime(fogStart)} – ${AstroCalc.formatTime(fogEnd)}\nDugpunktsforskel: ${day.fog.avgSpread}°C, Vind: ${day.fog.avgWind} m/s\nSolopgang kl. ${AstroCalc.formatTime(day.sun.sunrise)}`
+      });
+    }
+
+    // 2. Daggry & Gylden morgen
+    if (day.sun.sunrise) {
+      const mStart = (day.sun.blueHourMorning && day.sun.blueHourMorning.start) || new Date(day.sun.sunrise.getTime() - 50 * 60 * 1000);
+      const mEnd = (day.sun.goldenHourMorning && day.sun.goldenHourMorning.end) || new Date(day.sun.sunrise.getTime() + 45 * 60 * 1000);
+      const mScore = day.goldenMorning.score || 0;
+      const isPassed = isToday && now > mEnd;
+      const isActive = isToday && now >= mStart && now <= mEnd;
+      candidates.push({
+        type: 'morning',
+        title: 'Daggry & Morgenlys',
+        sub: 'Blå time & gylden time',
+        score: mScore,
+        start: mStart,
+        end: mEnd,
+        isPassed: isPassed,
+        isActive: isActive,
+        iconSvg: SVG_ICONS.dawn,
+        verdict: day.goldenMorning.text,
+        cond: `${day.goldenMorning.clouds ? day.goldenMorning.clouds.total : 0}% samlet skyer`,
+        wind: `${day.fog.avgWind} m/s`,
+        azimuth: day.sunriseAzimuth !== null ? `${Math.round(day.sunriseAzimuth)}° ${AstroCalc.getCompassDirection(day.sunriseAzimuth)}` : 'Øst',
+        calSummary: `📸 FotoVejr: Daggry & Gylden Time (${locName})`,
+        calDesc: `Morgenlys-kvalitet: ${mScore}%\nSolopgang kl. ${AstroCalc.formatTime(day.sun.sunrise)}\nAzimut: ${day.sunriseAzimuth !== null ? Math.round(day.sunriseAzimuth) + '°' : 'Øst'}`
+      });
+    }
+
+    // 3. Solnedgang & Aftenlys
+    if (day.sun.sunset) {
+      const eStart = (day.sun.goldenHourEvening && day.sun.goldenHourEvening.start) || new Date(day.sun.sunset.getTime() - 45 * 60 * 1000);
+      const eEnd = (day.sun.blueHourEvening && day.sun.blueHourEvening.end) || new Date(day.sun.sunset.getTime() + 45 * 60 * 1000);
+      const eScore = day.goldenEvening.score || 0;
+      const isPassed = isToday && now > eEnd;
+      const isActive = isToday && now >= eStart && now <= eEnd;
+      const eveWind = day.hourly && day.hourly[day.sun.sunset.getHours()] ? day.hourly[day.sun.sunset.getHours()].windSpeed.toFixed(1) : '2.0';
+      candidates.push({
+        type: 'evening',
+        title: 'Solnedgang & Aftenlys',
+        sub: 'Gylden time efterfulgt af blå time',
+        score: eScore,
+        start: eStart,
+        end: eEnd,
+        isPassed: isPassed,
+        isActive: isActive,
+        iconSvg: SVG_ICONS.sunset,
+        verdict: day.goldenEvening.text,
+        cond: `${day.goldenEvening.clouds ? day.goldenEvening.clouds.total : 0}% samlet skyer`,
+        wind: `${eveWind} m/s`,
+        azimuth: day.sunsetAzimuth !== null ? `${Math.round(day.sunsetAzimuth)}° ${AstroCalc.getCompassDirection(day.sunsetAzimuth)}` : 'Vest',
+        calSummary: `📸 FotoVejr: Solnedgang & Aftenlys (${locName})`,
+        calDesc: `Aftenlys-kvalitet: ${eScore}%\nSolnedgang kl. ${AstroCalc.formatTime(day.sun.sunset)}\nAzimut: ${day.sunsetAzimuth !== null ? Math.round(day.sunsetAzimuth) + '°' : 'Vest'}`
+      });
+    }
+
+    // 4. Stjernehimmel / Astro
+    if (day.sun.astronomicalDusk) {
+      const aStart = day.sun.astronomicalDusk;
+      const aEnd = day.sun.astronomicalDawn ? new Date(day.sun.astronomicalDawn.getTime() + 24 * 60 * 60 * 1000) : new Date(aStart.getTime() + 8 * 60 * 60 * 1000);
+      const aScore = day.astro.score || 0;
+      const isPassed = isToday && now > aEnd;
+      const isActive = isToday && now >= aStart && now <= aEnd;
+      candidates.push({
+        type: 'astro',
+        title: 'Stjernehimmel & Nat',
+        sub: 'Mælkevejen & dyb nat',
+        score: aScore,
+        start: aStart,
+        end: aEnd,
+        isPassed: isPassed,
+        isActive: isActive,
+        iconSvg: SVG_ICONS.astro,
+        verdict: day.astro.text,
+        cond: `${day.astro.avgClouds}% natskydække`,
+        wind: 'Klar nat',
+        azimuth: day.moonriseAzimuth !== null ? `Måne: ${Math.round(day.moonriseAzimuth)}°` : 'Syd',
+        calSummary: `📸 FotoVejr: Astronomisk Stjernehimmel (${locName})`,
+        calDesc: `Stjerneklar kvalitet: ${aScore}%\nAstronomisk mørke: ${day.astro.astroStart} – ${day.astro.astroEnd}\nNatskydække: ${day.astro.avgClouds}%`
+      });
+    }
+
+    if (candidates.length === 0) return;
+
+    let best = null;
+    if (isToday) {
+      const activeCandidates = candidates.filter(c => c.isActive);
+      if (activeCandidates.length > 0) {
+        activeCandidates.sort((a, b) => b.score - a.score);
+        best = activeCandidates[0];
+      } else {
+        const upcomingCandidates = candidates.filter(c => !c.isPassed);
+        if (upcomingCandidates.length > 0) {
+          upcomingCandidates.sort((a, b) => b.score - a.score);
+          best = upcomingCandidates[0];
+        } else {
+          candidates.sort((a, b) => b.score - a.score);
+          best = candidates[0];
+        }
+      }
+    } else {
+      candidates.sort((a, b) => b.score - a.score);
+      best = candidates[0];
+    }
+
+    el.heroIconWrap.innerHTML = best.iconSvg;
+    el.heroEventTitle.textContent = best.title;
+    el.heroEventSub.textContent = best.sub;
+
+    el.heroScoreBadge.textContent = `${best.score}/100`;
+    el.heroScoreBadge.className = `hero-score-badge ${best.score >= 70 ? 'high' : best.score >= 45 ? 'moderate' : 'low'}`;
+
+    const timeStartStr = AstroCalc.formatTime(best.start);
+    const timeEndStr = AstroCalc.formatTime(best.end);
+    el.heroTimeWindow.textContent = `${timeStartStr} – ${timeEndStr}`;
+
+    if (isToday) {
+      if (best.isActive) {
+        el.heroTimeRelative.textContent = '● Aktiv lige nu';
+        el.heroTimeRelative.style.color = '#10b981';
+      } else if (best.isPassed) {
+        el.heroTimeRelative.textContent = 'Passeret tidligere i dag';
+        el.heroTimeRelative.style.color = 'var(--text-muted)';
+      } else {
+        const msUntil = Math.max(0, best.start.getTime() - now.getTime());
+        el.heroTimeRelative.textContent = `Starter om ${formatDuration(msUntil)}`;
+        el.heroTimeRelative.style.color = 'var(--golden-primary)';
+      }
+    } else if (state.selectedDayIndex === 1) {
+      el.heroTimeRelative.textContent = `I morgen kl. ${timeStartStr}`;
+      el.heroTimeRelative.style.color = 'var(--golden-primary)';
+    } else {
+      const dayNames = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
+      el.heroTimeRelative.textContent = `${dayNames[day.date.getDay()]} kl. ${timeStartStr}`;
+      el.heroTimeRelative.style.color = 'var(--golden-primary)';
+    }
+
+    el.heroVerdictText.textContent = best.verdict;
+    el.heroSpecCond.textContent = best.cond;
+    el.heroSpecWind.textContent = best.wind;
+    el.heroSpecAzimuth.textContent = best.azimuth;
+
+    currentHeroCalendarPayload = {
+      title: best.calSummary,
+      description: best.calDesc,
+      location: locName,
+      start: best.start,
+      end: best.end,
+      alarmMinutes: 45
+    };
+  }
+
   // Render det aktuelt valgte døgn på fotokortene
   function renderSelectedDay() {
     const day = state.parsedDays[state.selectedDayIndex];
     if (!day) return;
 
     updateSelectedDayBanner(day);
+    renderHeroShotCall(day);
     renderFogCard(day);
     renderMorningCard(day);
     renderEveningCard(day);
@@ -790,7 +1063,7 @@
     const g = day.goldenMorning;
     const sun = day.sun;
 
-    el.morningBadge.textContent = `${g.icon} ${g.score}% kvalitet`;
+    el.morningBadge.textContent = `${g.score}% kvalitet`;
     el.morningAssessment.textContent = g.text;
 
     if (sun.blueHourMorning.start && sun.blueHourMorning.end) {
@@ -879,7 +1152,7 @@
     const g = day.goldenEvening;
     const sun = day.sun;
 
-    el.eveningBadge.textContent = `${g.icon} ${g.score}% kvalitet`;
+    el.eveningBadge.textContent = `${g.score}% kvalitet`;
     el.eveningAssessment.textContent = g.text;
 
     if (sun.goldenHourEvening.start && sun.goldenHourEvening.end) {
@@ -953,7 +1226,7 @@
   // Astro-kort opdatering
   function renderAstroCard(day) {
     const a = day.astro;
-    el.astroBadge.textContent = `${a.icon} ${a.score}% • ${a.status}`;
+    el.astroBadge.textContent = `${a.score}% • ${a.status}`;
     el.astroBadge.className = `score-badge ${a.score >= 70 ? 'high' : a.score >= 45 ? 'moderate' : 'low'}`;
     el.astroAssessment.textContent = a.text;
 
@@ -1001,10 +1274,10 @@
     const mt = day.moonTimes;
     const now = new Date();
 
-    el.moonIconHeader.textContent = moon.icon;
+    if (el.moonIconHeader) el.moonIconHeader.innerHTML = SVG_ICONS.moon;
     el.moonPhaseTitle.textContent = moon.name;
     el.moonIllumSubtitle.textContent = `${moon.fraction}% oplyst flade`;
-    el.moonBadge.textContent = `${moon.icon} ${moon.name}`;
+    el.moonBadge.textContent = `${moon.name}`;
 
     const dayNames = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
     let dayLabel = 'I dag';
@@ -1013,7 +1286,7 @@
 
     applyTimingBanner(el.moonTimingBanner, el.moonTimingLabel, el.moonTimingPill, {
       bannerClass: 'banner-info',
-      icon: '🌕',
+      icon: '',
       label: `Måneforhold for ${dayLabel.toLowerCase()}`,
       pill: dayLabel
     });
@@ -1223,6 +1496,95 @@
     el.btnToggleHourly.addEventListener('click', () => {
       const isOpen = el.hourlyContent.classList.toggle('open');
       el.btnToggleHourly.classList.toggle('open', isOpen);
+    });
+
+    // Hero Shot Call Kalender Export
+    if (el.btnHeroCalendar) {
+      el.btnHeroCalendar.addEventListener('click', () => {
+        if (currentHeroCalendarPayload) {
+          downloadCalendarEvent(currentHeroCalendarPayload);
+        }
+      });
+    }
+
+    // Kort-specifikke kalenderknapper
+    if (el.btnCalFog) {
+      el.btnCalFog.addEventListener('click', () => {
+        const day = state.parsedDays[state.selectedDayIndex];
+        if (!day || !day.sun.sunrise) return;
+        const start = new Date(day.sun.sunrise.getTime() - 60 * 60 * 1000);
+        const end = new Date(day.sun.sunrise.getTime() + 65 * 60 * 1000);
+        downloadCalendarEvent({
+          title: `📸 FotoVejr: Morgentåge (${state.currentLoc.name})`,
+          description: `Morgentåge-indeks: ${day.fog.score}%\nTidsvindue: ${AstroCalc.formatTime(start)} – ${AstroCalc.formatTime(end)}\nDugpunktsforskel: ${day.fog.avgSpread}°C, Vind: ${day.fog.avgWind} m/s\nSolopgang: kl. ${AstroCalc.formatTime(day.sun.sunrise)}`,
+          location: state.currentLoc.name,
+          start: start,
+          end: end,
+          alarmMinutes: 45
+        });
+      });
+    }
+
+    if (el.btnCalMorning) {
+      el.btnCalMorning.addEventListener('click', () => {
+        const day = state.parsedDays[state.selectedDayIndex];
+        if (!day || !day.sun.sunrise) return;
+        const start = (day.sun.blueHourMorning && day.sun.blueHourMorning.start) || new Date(day.sun.sunrise.getTime() - 50 * 60 * 1000);
+        const end = (day.sun.goldenHourMorning && day.sun.goldenHourMorning.end) || new Date(day.sun.sunrise.getTime() + 45 * 60 * 1000);
+        downloadCalendarEvent({
+          title: `📸 FotoVejr: Daggry & Morgenlys (${state.currentLoc.name})`,
+          description: `Morgenlys-kvalitet: ${day.goldenMorning.score}%\nSolopgang kl. ${AstroCalc.formatTime(day.sun.sunrise)}\nAzimut: ${day.sunriseAzimuth !== null ? Math.round(day.sunriseAzimuth) + '°' : 'Øst'}`,
+          location: state.currentLoc.name,
+          start: start,
+          end: end,
+          alarmMinutes: 45
+        });
+      });
+    }
+
+    if (el.btnCalEvening) {
+      el.btnCalEvening.addEventListener('click', () => {
+        const day = state.parsedDays[state.selectedDayIndex];
+        if (!day || !day.sun.sunset) return;
+        const start = (day.sun.goldenHourEvening && day.sun.goldenHourEvening.start) || new Date(day.sun.sunset.getTime() - 45 * 60 * 1000);
+        const end = (day.sun.blueHourEvening && day.sun.blueHourEvening.end) || new Date(day.sun.sunset.getTime() + 45 * 60 * 1000);
+        downloadCalendarEvent({
+          title: `📸 FotoVejr: Solnedgang & Aftenlys (${state.currentLoc.name})`,
+          description: `Aftenlys-kvalitet: ${day.goldenEvening.score}%\nSolnedgang kl. ${AstroCalc.formatTime(day.sun.sunset)}\nAzimut: ${day.sunsetAzimuth !== null ? Math.round(day.sunsetAzimuth) + '°' : 'Vest'}`,
+          location: state.currentLoc.name,
+          start: start,
+          end: end,
+          alarmMinutes: 45
+        });
+      });
+    }
+
+    if (el.btnCalAstro) {
+      el.btnCalAstro.addEventListener('click', () => {
+        const day = state.parsedDays[state.selectedDayIndex];
+        if (!day || !day.sun.astronomicalDusk) return;
+        const start = day.sun.astronomicalDusk;
+        const end = day.sun.astronomicalDawn ? new Date(day.sun.astronomicalDawn.getTime() + 24 * 60 * 60 * 1000) : new Date(start.getTime() + 8 * 60 * 60 * 1000);
+        downloadCalendarEvent({
+          title: `📸 FotoVejr: Astronomisk Stjernehimmel (${state.currentLoc.name})`,
+          description: `Stjerneklar kvalitet: ${day.astro.score}%\nAstronomisk mørke: ${day.astro.astroStart} – ${day.astro.astroEnd}\nNatskydække: ${day.astro.avgClouds}%`,
+          location: state.currentLoc.name,
+          start: start,
+          end: end,
+          alarmMinutes: 45
+        });
+      });
+    }
+
+    // Fold-ud / To-lags målinger skuffe-toggle
+    document.querySelectorAll('.btn-toggle-deep-data').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const drawer = document.getElementById(targetId);
+        if (!drawer) return;
+        const isOpen = drawer.classList.toggle('open');
+        btn.classList.toggle('open', isOpen);
+      });
     });
   }
 

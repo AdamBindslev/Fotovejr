@@ -385,12 +385,16 @@
     var text = 'Pænt lys';
     var icon = '☀️';
 
-    if (low >= 80) {
+    if (low >= 70 || (total >= 85 && (low + mid) >= 80)) {
       score = 20;
-      text = 'Tungt lavt skydække blokerer sandsynligvis for den gyldne glød';
+      text = 'Tungt lavt skydække blokerer for direkte sollys og gylden glød';
+      icon = '☁️';
+    } else if (total >= 75) {
+      score = 35;
+      text = 'Overvejende overskyet – diffust og dæmpet lys ved horisonten';
       icon = '☁️';
     } else if (total <= 15) {
-      score = 80;
+      score = 85;
       text = 'Klar himmel – rent gyldent lys og skarpe lange skygger';
       icon = '🌅';
     } else if (low <= 30 && (mid + high >= 30 && mid + high <= 75)) {
@@ -444,63 +448,105 @@
     });
     avgClouds /= nightHours.length;
     avgLowClouds /= nightHours.length;
+    var roundClouds = Math.round(avgClouds);
+
+    // Beregn månens tilstedeværelse over horisonten i natte-vinduet
+    var moonUpHours = 0;
+    nightHours.forEach(function (h) {
+      var d = new Date(date.getFullYear(), date.getMonth(), date.getDate() + (h.hour <= 4 ? 1 : 0), h.hour, 0, 0);
+      try {
+        var pos = AstroCalc.getMoonPosition(d, lat, lng);
+        if (pos && pos.altitude > 0) {
+          moonUpHours++;
+        }
+      } catch (e) {}
+    });
 
     var points = 100;
 
-    // Træk point fra for skyer
-    points -= (avgClouds * 0.7);
-    points -= (avgLowClouds * 0.3);
-
-    // Måne-interferens:
-    // Hvis månen er næsten fuld (> 70%) og står op om natten, lyser den himlen op så stjerner drukner.
-    var moonImpact = 'Månen forstyrrer ikke nattehimlen';
-    var isMoonDownDuringNight = false;
-
-    if (moonTimes.rise && moonTimes.set) {
-      // Hvis månen går ned før midnat eller står op efter daggry
-      var riseH = moonTimes.rise.getHours();
-      var setH = moonTimes.set.getHours();
-      if ((setH >= 21 || setH <= 2) && (riseH >= 5 || riseH <= 18)) {
-        isMoonDownDuringNight = true;
-      }
+    // Træk point fra for skyer (skyer er det absolut vigtigste for stjernekiggeri)
+    if (roundClouds <= 10) {
+      points -= (roundClouds * 0.5);
+    } else if (roundClouds <= 30) {
+      points -= (5 + (roundClouds - 10) * 1.0);
+    } else if (roundClouds <= 60) {
+      points -= (25 + (roundClouds - 30) * 1.5);
+    } else {
+      // Svært overskyet nat (f.eks. 70-80%+) giver ugunstig score
+      points -= (70 + (roundClouds - 60) * 0.7);
     }
 
-    if (moon.fraction > 60 && !isMoonDownDuringNight) {
-      points -= (moon.fraction * 0.35);
-      moonImpact = 'Klart måneskin (' + moon.fraction + '%) mindsker synligheden af svage stjerner og Mælkevejen';
-    } else if (moon.fraction <= 25 || isMoonDownDuringNight) {
-      points += 10;
-      moonImpact = 'Sort himmel – optimal kontrast til Mælkevejen og stjerneskud';
+    // Ekstra fradrag for uigennemtrængelige lave skyer
+    points -= (avgLowClouds * 0.25);
+
+    // Månepåvirkning:
+    var moonImpact = '';
+    if (moonUpHours === 0) {
+      moonImpact = 'Månen er under horisonten hele natten (ingen måneforstyrrelse)';
+    } else if (moon.fraction <= 15) {
+      moonImpact = 'Nymåne / ultrasvagt segl (' + moon.fraction + '%) – intet generende måneskin';
+    } else if (moon.fraction <= 45) {
+      points -= Math.round((moon.fraction / 100) * 15);
+      moonImpact = 'Svag månefase (' + moon.fraction + '%) – kun moderat lyspåvirkning';
+    } else {
+      points -= Math.round((moon.fraction / 100) * 35);
+      moonImpact = 'Kraftigt måneskin (' + moon.fraction + '%) oplyser natten og udvisker svage stjerner';
     }
 
     if (!hasAstroNight) {
-      // Om sommeren i Danmark (lyse nætter fra maj til august) bliver solen ikke -18 grader
-      points = Math.min(points, 65);
-      moonImpact += ' (Bemærk: Lyse nætter forhindrer komplet astronomisk mørke)';
+      points = Math.min(points, 50);
+      moonImpact += ' • Bemærk: Lyse nætter forhindrer kulsort astronomisk mørke';
     }
 
     var finalScore = Math.min(100, Math.max(0, Math.round(points)));
 
-    var text = 'Ugunstige forhold';
-    var status = 'Dårlig';
+    var status = 'Ugunstig';
     var icon = '☁️';
+    var text = '';
 
-    if (finalScore >= 80) {
-      status = 'Fremragende';
-      text = 'Krystalklar stjernehimmel! Ideelt til Mælkevejen, stjerneskud og deep sky';
-      icon = '✨';
-    } else if (finalScore >= 60) {
-      status = 'God';
-      text = 'Fine muligheder for stjernebilleder med få forstyrrende skyer';
-      icon = '🔭';
-    } else if (finalScore >= 40) {
-      status = 'Moderat';
-      text = 'Enkelte klare kighuller mellem skyerne eller dæmpet af måneskin';
-      icon = '⛅';
-    } else {
+    if (roundClouds >= 75) {
       status = 'Ugunstig';
-      text = 'Skydækket dækker himlen';
       icon = '☁️';
+      if (moonUpHours === 0 || moon.fraction <= 20) {
+        text = 'Tæt skydække (' + roundClouds + '%) dækker himlen i nat. Månen er ellers under horisonten, men skyerne blokerer udsynet.';
+      } else {
+        text = 'Tæt skydække (' + roundClouds + '%) og måneskin forhindrer stjernekiggeri og astrofotografering i nat.';
+      }
+    } else if (roundClouds >= 50) {
+      status = 'Svag';
+      icon = '⛅';
+      if (moonUpHours === 0 || moon.fraction <= 20) {
+        text = 'Overvejende skyet (' + roundClouds + '%). Kun spredte kighuller til enkelte klare stjerner og planeter mellem skyerne.';
+      } else {
+        text = 'Vanskelige stjerneforhold: Skyet (' + roundClouds + '%) kombineret med oplysende måneskin (' + moon.fraction + '%).';
+      }
+    } else if (roundClouds >= 25) {
+      status = 'Moderat';
+      icon = '🌤️';
+      if (moonUpHours === 0 || moon.fraction <= 20) {
+        text = 'Blandede stjerneforhold med spredte skyer (' + roundClouds + '%). Fin kontrast til stjernebilleder i de klare passager.';
+      } else {
+        text = 'Delvist klart (' + roundClouds + '% skyer), men måneskinnet (' + moon.fraction + '%) svækker udsynet til Mælkevejen.';
+      }
+    } else {
+      // Under 25% skyer - klart vejr!
+      if (moonUpHours === 0 || moon.fraction <= 20) {
+        status = 'Fremragende';
+        icon = '✨';
+        text = 'Krystalklar stjernehimmel uden månelys! Ideelle betingelser for Mælkevejen, stjerneskud og deep-sky.';
+      } else if (moon.fraction <= 50) {
+        status = 'God';
+        icon = '🔭';
+        text = 'Klar nattehimmel (' + roundClouds + '% skyer). Svagt måneskin dæmper de mest lyssvage stjerner.';
+      } else {
+        status = 'Moderat';
+        icon = '🌕';
+        text = 'Klar himmel (' + roundClouds + '% skyer), men kraftigt måneskin (' + moon.fraction + '%) oplyser atmosfæren.';
+      }
+    }
+
+    if (!hasAstroNight) {
+      text += ' (Lyse nætter: Himlen når ikke astronomisk mørke).';
     }
 
     return {
@@ -508,7 +554,7 @@
       status: status,
       text: text,
       icon: icon,
-      avgClouds: Math.round(avgClouds),
+      avgClouds: roundClouds,
       moonImpact: moonImpact,
       hasAstroNight: !!hasAstroNight,
       astroStart: sun.astronomicalDusk ? AstroCalc.formatTime(sun.astronomicalDusk) : null,

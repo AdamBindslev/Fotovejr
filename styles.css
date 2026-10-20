@@ -766,7 +766,7 @@ body.theme-night-red .badge-beta {
   color: #7dd3fc;
 }
 
-/* Aktiv lige nu (Active) */
+/* Aktiv lige nu (Active - gode betingelser) */
 .card-timing-banner.banner-active {
   background: rgba(16, 185, 129, 0.18);
   color: #34d399;
@@ -778,6 +778,32 @@ body.theme-night-red .badge-beta {
   background: #10b981;
   color: #042f2e;
   animation: pulseGreen 2s infinite ease-in-out;
+}
+
+/* Aktiv lige nu, men moderat / vekslende kvalitet */
+.card-timing-banner.banner-active-moderate {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.card-timing-banner.banner-active-moderate .timing-banner-pill {
+  background: #f59e0b;
+  color: #1c1917;
+  font-weight: 700;
+}
+
+/* Aktiv tidsvindue, men overskyet / ugunstige vejrforhold */
+.card-timing-banner.banner-active-poor {
+  background: rgba(100, 116, 139, 0.16);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.card-timing-banner.banner-active-poor .timing-banner-pill {
+  background: rgba(148, 163, 184, 0.25);
+  color: #cbd5e1;
+  font-weight: 700;
 }
 
 @keyframes pulseGreen {

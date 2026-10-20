@@ -54,6 +54,7 @@
     fogTimingPill: document.getElementById('fogTimingPill'),
     fogTimeWindow: document.getElementById('fogTimeWindow'),
     fogTimeSub: document.getElementById('fogTimeSub'),
+    fogSpreadSub: document.getElementById('fogSpreadSub'),
     fogJumpAction: document.getElementById('fogJumpAction'),
     fogSpread: document.getElementById('fogSpread'),
     fogHumidity: document.getElementById('fogHumidity'),
@@ -113,6 +114,7 @@
     astroDarkWindow: document.getElementById('astroDarkWindow'),
     astroDarkSub: document.getElementById('astroDarkSub'),
     astroClouds: document.getElementById('astroClouds'),
+    astroCloudsSub: document.getElementById('astroCloudsSub'),
     astroMoonImpact: document.getElementById('astroMoonImpact'),
 
     // Måne
@@ -358,22 +360,113 @@
   }
 
   // Beregner tidsstatus for en fotobegivenhed (aktiv, passeret, kommende, fremtidig)
-  function getEventTiming(startTime, endTime, dayIndex, dayDate, eventType) {
+  function getEventTiming(startTime, endTime, dayIndex, dayDate, eventType, score) {
     const now = new Date();
     const dayNamesFull = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
+    const quality = typeof score === 'number' ? score : 50;
 
     // I dag (dag 0)
     if (dayIndex === 0) {
       // Aktiv lige nu
       if (startTime && endTime && now >= startTime && now <= endTime) {
         const remainingMs = endTime.getTime() - now.getTime();
+        const durationStr = formatDuration(remainingMs);
+
+        let bannerClass = 'banner-active';
+        let icon = '🟢';
+        let pill = 'Aktiv nu';
+        let label = 'Aktiv lige nu • Slutter om ' + durationStr;
+        let sub = 'Aktiv lige nu (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+
+        if (eventType === 'astro') {
+          if (quality >= 65) {
+            bannerClass = 'banner-active';
+            icon = '✨';
+            pill = 'Aktiv nu';
+            label = 'Gode stjerneforhold nu • Slutter om ' + durationStr;
+            sub = 'Astronomisk nat aktiv lige nu (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+          } else if (quality >= 40) {
+            bannerClass = 'banner-active-moderate';
+            icon = '⛅';
+            pill = 'Moderat nu';
+            label = 'Astronomisk nat aktiv • Vekslende skydække (slutter om ' + durationStr + ')';
+            sub = 'Mørke i gang (kl. ' + AstroCalc.formatTime(endTime) + ') • Skiftende skyer';
+          } else {
+            bannerClass = 'banner-active-poor';
+            icon = '☁️';
+            pill = 'Overskyet nu';
+            label = 'Astronomisk nat er i gang • Desværre overskyet (slutter om ' + durationStr + ')';
+            sub = 'Mørke i gang (kl. ' + AstroCalc.formatTime(endTime) + ') • Dækket af skyer';
+          }
+        } else if (eventType === 'fog') {
+          if (quality >= 55) {
+            bannerClass = 'banner-active';
+            icon = '🌫️';
+            pill = 'Aktiv nu';
+            label = 'Tågevindue aktivt nu • Gode tågebetingelser (slutter om ' + durationStr + ')';
+            sub = 'Tågevindue aktivt lige nu (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+          } else if (quality >= 35) {
+            bannerClass = 'banner-active-moderate';
+            icon = '🌁';
+            pill = 'Moderat nu';
+            label = 'Tidsvindue aktivt • Mulighed for let morgendis (slutter om ' + durationStr + ')';
+            sub = 'Tidsvindue aktivt (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+          } else {
+            bannerClass = 'banner-active-poor';
+            icon = '☀️';
+            pill = 'Klar sigt';
+            label = 'Morgentime i gang • Lav tågerisiko / klar luft (slutter om ' + durationStr + ')';
+            sub = 'Morgenstund i gang (slutter kl. ' + AstroCalc.formatTime(endTime) + ') • Ingen tåge';
+          }
+        } else if (eventType === 'morning') {
+          if (quality >= 65) {
+            bannerClass = 'banner-active';
+            icon = '🌅';
+            pill = 'Aktiv nu';
+            label = 'Gylden time aktiv lige nu • Flot morgenlys (slutter om ' + durationStr + ')';
+            sub = 'Daggry i gang nu (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+          } else if (quality >= 40) {
+            bannerClass = 'banner-active-moderate';
+            icon = '🌤️';
+            pill = 'Vekslende nu';
+            label = 'Morgenlys aktivt nu • Vekslende skydække (slutter om ' + durationStr + ')';
+            sub = 'Morgenlys i gang (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+          } else {
+            bannerClass = 'banner-active-poor';
+            icon = '☁️';
+            pill = 'Overskyet nu';
+            label = 'Morgentime i gang • Solen skjult af skydække (slutter om ' + durationStr + ')';
+            sub = 'Morgenlys i gang, men dækket af skyer';
+          }
+        } else if (eventType === 'evening') {
+          if (quality >= 65) {
+            bannerClass = 'banner-active';
+            icon = '🌆';
+            pill = 'Aktiv nu';
+            label = 'Solnedgang aktiv lige nu • Smukt aftenlys (slutter om ' + durationStr + ')';
+            sub = 'Aktiv solnedgang lige nu (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+          } else if (quality >= 40) {
+            bannerClass = 'banner-active-moderate';
+            icon = '🌤️';
+            pill = 'Moderat nu';
+            label = 'Aftenlys i gang • Vekslende skydække (slutter om ' + durationStr + ')';
+            sub = 'Solnedgang i gang (slutter kl. ' + AstroCalc.formatTime(endTime) + ')';
+          } else {
+            bannerClass = 'banner-active-poor';
+            icon = '☁️';
+            pill = 'Overskyet nu';
+            label = 'Solnedgang i gang • Skjult bag tungt skydække (slutter om ' + durationStr + ')';
+            sub = 'Solnedgang i gang, men skjult bag skyer';
+          }
+        }
+
         return {
           status: 'active',
-          bannerClass: 'banner-active',
-          icon: '🟢',
-          pill: 'Aktiv nu',
-          label: 'Aktiv lige nu • Slutter om ' + formatDuration(remainingMs),
-          sub: 'Aktiv lige nu (slutter kl. ' + AstroCalc.formatTime(endTime) + ')',
+          bannerClass: bannerClass,
+          icon: icon,
+          pill: pill,
+          label: label,
+          sub: sub,
           isPassed: false
         };
       }
@@ -410,10 +503,16 @@
         let sub = 'Starter kl. ' + AstroCalc.formatTime(startTime) + ' (om ' + formatDuration(untilMs) + ')';
 
         if (eventType === 'evening') {
-          label = 'I aften • Om ' + formatDuration(untilMs);
+          label = quality >= 65
+            ? 'I aften • Om ' + formatDuration(untilMs) + ' (flot aftenlys)'
+            : 'I aften • Om ' + formatDuration(untilMs);
           sub = 'Starter i aften kl. ' + AstroCalc.formatTime(startTime) + ' (om ' + formatDuration(untilMs) + ')';
         } else if (eventType === 'astro') {
-          label = 'I aften/nat • Om ' + formatDuration(untilMs);
+          label = quality >= 65
+            ? 'I aften/nat • Om ' + formatDuration(untilMs) + ' (klare stjerneforhold)'
+            : quality <= 35
+              ? 'I aften/nat • Om ' + formatDuration(untilMs) + ' (forventet overskyet)'
+              : 'I aften/nat • Om ' + formatDuration(untilMs);
           sub = 'Astronomisk nat starter kl. ' + AstroCalc.formatTime(startTime) + ' (om ' + formatDuration(untilMs) + ')';
         } else if (eventType === 'fog' || eventType === 'morning') {
           label = 'I dag ved daggry • Om ' + formatDuration(untilMs);
@@ -526,17 +625,32 @@
       const aStart = sun.astronomicalDusk;
 
       if (fogEnd && now <= fogEnd) {
-        el.dayBannerSubtitle.textContent = `Næste: Morgentåge & solopgang kl. ${AstroCalc.formatTime(sun.sunrise)}`;
+        const hasFog = day.fog && day.fog.score >= 50;
+        el.dayBannerSubtitle.textContent = hasFog
+          ? `Aktuel nu: Morgentåge & solopgang kl. ${AstroCalc.formatTime(sun.sunrise)}`
+          : `Aktuel nu: Solopgang & daggry kl. ${AstroCalc.formatTime(sun.sunrise)}`;
       } else if (mEnd && now <= mEnd) {
-        el.dayBannerSubtitle.textContent = `Næste: Daggry & gylden time kl. ${AstroCalc.formatTime(sun.sunrise)}`;
+        const isGoodMorn = day.goldenMorning && day.goldenMorning.score >= 50;
+        el.dayBannerSubtitle.textContent = isGoodMorn
+          ? `Aktuel lige nu: Daggry & gylden time!`
+          : `Aktuel lige nu: Daggry (skydækket morgen)`;
       } else if (eStart && now < eStart) {
         el.dayBannerSubtitle.textContent = `Næste: Gylden time i aften kl. ${AstroCalc.formatTime(eStart)} (om ${formatDuration(eStart.getTime() - now.getTime())})`;
       } else if (eEnd && now <= eEnd) {
-        el.dayBannerSubtitle.textContent = `Aktuel lige nu: Solnedgang & aftenlys!`;
+        const isGoodEve = day.goldenEvening && day.goldenEvening.score >= 50;
+        el.dayBannerSubtitle.textContent = isGoodEve
+          ? `Aktuel lige nu: Solnedgang & aftenlys!`
+          : `Aktuel lige nu: Solnedgang (skjult bag skyer)`;
       } else if (aStart && now < aStart) {
-        el.dayBannerSubtitle.textContent = `Næste: Stjerneklart mørke i aften kl. ${AstroCalc.formatTime(aStart)} (om ${formatDuration(aStart.getTime() - now.getTime())})`;
+        const isGoodAstro = day.astro && day.astro.score >= 60;
+        el.dayBannerSubtitle.textContent = isGoodAstro
+          ? `Næste: Stjernehimmel i aften kl. ${AstroCalc.formatTime(aStart)} (om ${formatDuration(aStart.getTime() - now.getTime())})`
+          : `Næste: Astronomisk mørke i aften kl. ${AstroCalc.formatTime(aStart)} (om ${formatDuration(aStart.getTime() - now.getTime())})`;
       } else if (aStart && now >= aStart) {
-        el.dayBannerSubtitle.textContent = `Aktuel i nat: Astronomisk nat (stjernehimmel)`;
+        const isGoodAstro = day.astro && day.astro.score >= 60;
+        el.dayBannerSubtitle.textContent = isGoodAstro
+          ? `Aktuel i nat: Krystalklar astronomisk stjernehimmel`
+          : `Aktuel i nat: Astronomisk nat (${day.astro.avgClouds}% skydække)`;
       } else {
         el.dayBannerSubtitle.textContent = `Dagens soltimer er passeret • Tryk 'I morgen' for næste dagslys`;
       }
@@ -546,7 +660,10 @@
       if (sun.sunrise) {
         const mStart = sun.blueHourMorning ? sun.blueHourMorning.start : sun.sunrise;
         const until = Math.max(0, mStart.getTime() - now.getTime());
-        el.dayBannerSubtitle.textContent = `Første fotomulighed: Daggry & tåge kl. ${AstroCalc.formatTime(mStart)} (om ${formatDuration(until)})`;
+        const hasFogTomorrow = day.fog && day.fog.score >= 50;
+        el.dayBannerSubtitle.textContent = hasFogTomorrow
+          ? `Første fotomulighed: Daggry & tåge kl. ${AstroCalc.formatTime(mStart)} (om ${formatDuration(until)})`
+          : `Første fotomulighed: Daggry & morgenlys kl. ${AstroCalc.formatTime(mStart)} (om ${formatDuration(until)})`;
       } else {
         el.dayBannerSubtitle.textContent = `Fotovejrudsigt for i morgen`;
       }
@@ -637,7 +754,7 @@
       fogEnd = new Date(day.date.getFullYear(), day.date.getMonth(), day.date.getDate(), 8, 30);
     }
 
-    const timing = getEventTiming(fogStart, fogEnd, state.selectedDayIndex, day.date, 'fog');
+    const timing = getEventTiming(fogStart, fogEnd, state.selectedDayIndex, day.date, 'fog', fog.score);
     applyTimingBanner(el.fogTimingBanner, el.fogTimingLabel, el.fogTimingPill, timing);
 
     if (el.fogTimeSub) el.fogTimeSub.textContent = timing.sub;
@@ -657,6 +774,12 @@
     }
 
     el.fogSpread.textContent = `${fog.avgSpread}°C`;
+    if (el.fogSpreadSub) {
+      const spreadVal = parseFloat(fog.avgSpread);
+      if (spreadVal <= 1.0) el.fogSpreadSub.textContent = 'Meget lille forskel (høj tågefare)';
+      else if (spreadVal <= 2.5) el.fogSpreadSub.textContent = 'Moderat forskel (mulig dis)';
+      else el.fogSpreadSub.textContent = 'For stor forskel til tåge';
+    }
     el.fogHumidity.textContent = `${fog.avgHumidity}%`;
     el.fogWind.textContent = `${fog.avgWind} m/s`;
     el.fogVisibility.textContent = `${fog.minVisibilityKm} km`;
@@ -684,7 +807,7 @@
 
     const mStart = (sun.blueHourMorning && sun.blueHourMorning.start) || (sun.sunrise ? new Date(sun.sunrise.getTime() - 50 * 60 * 1000) : null);
     const mEnd = (sun.goldenHourMorning && sun.goldenHourMorning.end) || (sun.sunrise ? new Date(sun.sunrise.getTime() + 45 * 60 * 1000) : null);
-    const timing = getEventTiming(mStart, mEnd, state.selectedDayIndex, day.date, 'morning');
+    const timing = getEventTiming(mStart, mEnd, state.selectedDayIndex, day.date, 'morning', g.score);
 
     applyTimingBanner(el.morningTimingBanner, el.morningTimingLabel, el.morningTimingPill, timing);
     if (el.cardMorning) el.cardMorning.classList.toggle('card-event-passed', timing.isPassed);
@@ -716,7 +839,15 @@
     }
 
     if (el.morningBlueSub) {
-      el.morningBlueSub.textContent = timing.isPassed ? 'Afsluttet i morges' : 'dybblå himmel & bylancering';
+      if (timing.isPassed) {
+        el.morningBlueSub.textContent = 'Afsluttet i morges';
+      } else if (g.clouds && g.clouds.total >= 75) {
+        el.morningBlueSub.textContent = 'Overskyet blå time (diffust lys)';
+      } else if (g.clouds && g.clouds.total <= 30) {
+        el.morningBlueSub.textContent = 'Klar dybblå himmel & bylys';
+      } else {
+        el.morningBlueSub.textContent = 'Vekslende skydække i den blå time';
+      }
     }
 
     if (el.morningJumpAction) {
@@ -765,7 +896,7 @@
 
     const eStart = (sun.goldenHourEvening && sun.goldenHourEvening.start) || (sun.sunset ? new Date(sun.sunset.getTime() - 45 * 60 * 1000) : null);
     const eEnd = (sun.blueHourEvening && sun.blueHourEvening.end) || (sun.sunset ? new Date(sun.sunset.getTime() + 45 * 60 * 1000) : null);
-    const timing = getEventTiming(eStart, eEnd, state.selectedDayIndex, day.date, 'evening');
+    const timing = getEventTiming(eStart, eEnd, state.selectedDayIndex, day.date, 'evening', g.score);
 
     applyTimingBanner(el.eveningTimingBanner, el.eveningTimingLabel, el.eveningTimingPill, timing);
     if (el.cardEvening) el.cardEvening.classList.toggle('card-event-passed', timing.isPassed);
@@ -797,7 +928,15 @@
     }
 
     if (el.eveningBlueSub) {
-      el.eveningBlueSub.textContent = timing.isPassed ? 'Afsluttet i aften' : 'perfekt til langtidseksponering';
+      if (timing.isPassed) {
+        el.eveningBlueSub.textContent = 'Afsluttet i aften';
+      } else if (g.clouds && g.clouds.total >= 75) {
+        el.eveningBlueSub.textContent = 'Overskyet blå time (diffust lys)';
+      } else if (g.clouds && g.clouds.total <= 30) {
+        el.eveningBlueSub.textContent = 'Klar dybblå himmel & langtidseksponering';
+      } else {
+        el.eveningBlueSub.textContent = 'Vekslende skydække i den blå time';
+      }
     }
 
     if (g.clouds) {
@@ -836,7 +975,7 @@
       el.astroDarkWindow.textContent = 'Ingen astronomisk nat';
     }
 
-    const timing = getEventTiming(aStart, aEnd, state.selectedDayIndex, day.date, 'astro');
+    const timing = getEventTiming(aStart, aEnd, state.selectedDayIndex, day.date, 'astro', a.score);
     applyTimingBanner(el.astroTimingBanner, el.astroTimingLabel, el.astroTimingPill, timing);
 
     if (el.astroDarkSub) {
@@ -845,6 +984,14 @@
     if (el.cardAstro) el.cardAstro.classList.toggle('card-event-passed', timing.isPassed);
 
     el.astroClouds.textContent = `${a.avgClouds}%`;
+    if (el.astroCloudsSub) {
+      if (a.avgClouds <= 15) el.astroCloudsSub.textContent = 'Klart udsyn til stjerner';
+      else if (a.avgClouds <= 35) el.astroCloudsSub.textContent = 'Få spredte skyer';
+      else if (a.avgClouds <= 60) el.astroCloudsSub.textContent = 'Vekslende skydække / kighuller';
+      else if (a.avgClouds <= 85) el.astroCloudsSub.textContent = 'Mest overskyet / få kighuller';
+      else el.astroCloudsSub.textContent = 'Helt overskyet / intet udsyn';
+    }
+
     el.astroMoonImpact.textContent = a.moonImpact;
   }
 

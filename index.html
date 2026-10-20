@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="Specialiseret vejr til fotografer: Gylden time, blå time, morgentåge, fuldmåne og stjerneklart.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Clear or Foggy">
+
+  <title>Clear or Foggy – Fotografens Vejrguide</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Henter vejr og beregner fototider...</div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="brand">
+          <img src="icon.svg" alt="Clear or Foggy Logo" class="brand-icon astro-native">
+          <div class="brand-title">
+            <h1>Clear or Foggy</h1>
+            <span>Fotografens Vejrguide</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <!-- Rød Nattilstand toggle -->
+          <button id="btnNightMode" class="btn-icon" title="Rød Astro Nattilstand (bevarer nattesyn)" aria-label="Astro Nattilstand">
+            🔴
+          </button>
+          <!-- Opdater knap -->
+          <button id="btnRefresh" class="btn-icon" title="Opdater vejrdata" aria-label="Opdater">
+            🔄
+          </button>
+        </div>
+      </div>
+
+      <!-- LOKATION & FAVORITTER -->
+      <div class="location-bar">
+        <div class="location-current" id="locationCurrentWrap" title="Klik for at søge sted">
+          <span class="location-pin">📍</span>
+          <div class="location-info">
+            <span class="location-name" id="locName">København</span>
+            <span class="location-status" id="locCoords">55.68°N, 12.57°Ø</span>
+          </div>
+        </div>
+
+        <div class="location-btn-group">
+          <!-- GPS knap -->
+          <button id="btnGps" class="location-sub-btn" title="Brug min aktuelle position">
+            <span>🎯</span> GPS
+          </button>
+          <!-- Søg knap -->
+          <button id="btnSearchOpen" class="location-sub-btn" title="Søg by eller fotospot">
+            <span>🔍</span> Søg
+          </button>
+          <!-- Favorit stjerne -->
+          <button id="btnFavoriteToggle" class="location-sub-btn" title="Gem som favoritspot">
+            <span id="favStarIcon">☆</span>
+          </button>
+        </div>
+
+        <!-- Søge dropdown modal -->
+        <div class="search-dropdown" id="searchDropdown">
+          <div class="search-input-wrap">
+            <span>🔍</span>
+            <input type="text" id="searchInput" placeholder="Søg by el. fotospot (f.eks. Møns Klint, Skagen, Silkeborg)..." autocomplete="off">
+          </div>
+          <div class="search-results" id="searchResults">
+            <!-- Dynamiske søgeresultater -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Favorit-spots hurtigbjælke -->
+      <div class="favorites-bar" id="favoritesBar">
+        <!-- Genereres dynamisk i app.js -->
+      </div>
+    </header>
+
+    <!-- STATUS / OFFLINE BANNER -->
+    <div id="statusBanner" class="status-pill-banner">
+      <span id="statusBannerText">Offline tilstand – viser gemte data</span>
+      <span id="statusBannerTime"></span>
+    </div>
+
+    <!-- 7-DAGES HORISONTAL VÆLGER -->
+    <section class="days-bar-container">
+      <div class="days-bar-label">Vælg dag (næste 7 dage)</div>
+      <div class="days-scroll" id="daysScroll">
+        <!-- 7 dag-chips genereres dynamisk i app.js -->
+      </div>
+    </section>
+
+    <!-- FOKUS KORT: Dagens Fotomuligheder -->
+    <main class="cards-grid" id="cardsGrid">
+
+      <!-- 1. TÅGE & MORGENDIS -->
+      <article class="photo-card card-fog" id="cardFog">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">🌫️</span>
+            <div class="card-title">
+              <h3>Morgentåge & Dis</h3>
+              <span class="card-subtitle">Strålingståge, enge & vandoverflader</span>
+            </div>
+          </div>
+          <div class="score-badge" id="fogBadge">Beregner...</div>
+        </div>
+
+        <div class="card-content">
+          <p class="assessment-text" id="fogAssessment">
+            Beregner chancer for tågedannelse...
+          </p>
+
+          <div class="time-window-grid">
+            <div class="time-box">
+              <span class="time-box-label">Optimalt tidsrum</span>
+              <span class="time-box-value" id="fogTimeWindow">05:30 – 08:15</span>
+              <span class="time-box-sub">omkring solopgang</span>
+            </div>
+            <div class="time-box">
+              <span class="time-box-label">Dugpunkts-forskel</span>
+              <span class="time-box-value" id="fogSpread">0.8°C</span>
+              <span class="time-box-sub">lav forskel = høj tågefare</span>
+            </div>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-item">
+              <span class="metric-val" id="fogHumidity">96%</span>
+              <span class="metric-label">Luftfugtighed</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val" id="fogWind">4 km/t</span>
+              <span class="metric-label">Vindhastighed</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val" id="fogVisibility">&lt; 1.0 km</span>
+              <span class="metric-label">Min. sigtbarhed</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 2. MORGEN: GYLDEN & BLÅ TIME -->
+      <article class="photo-card card-golden" id="cardMorning">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">🌅</span>
+            <div class="card-title">
+              <h3>Daggry & Morgenlys</h3>
+              <span class="card-subtitle">Blå time efterfulgt af gylden time</span>
+            </div>
+          </div>
+          <div class="score-badge high" id="morningBadge">🌅 Gylden time</div>
+        </div>
+
+        <div class="card-content">
+          <p class="assessment-text" id="morningAssessment">
+            Beregner morgenens lysforhold...
+          </p>
+
+          <div class="time-window-grid">
+            <div class="time-box">
+              <span class="time-box-label">
+                <span>Blå time</span>
+                <span class="compass-pill" id="morningBlueCompass">Øst</span>
+              </span>
+              <span class="time-box-value" id="morningBlueTime">06:15 – 06:45</span>
+              <span class="time-box-sub">dybblå himmel & bylancering</span>
+            </div>
+            <div class="time-box">
+              <span class="time-box-label">
+                <span>Gylden time</span>
+                <span class="compass-pill" id="morningGoldenCompass">104° ØSØ</span>
+              </span>
+              <span class="time-box-value" id="morningGoldenTime">06:45 – 07:35</span>
+              <span class="time-box-sub" id="morningSunriseSub">Solopgang kl. 07:10</span>
+            </div>
+          </div>
+
+          <div class="cloud-breakdown-bar">
+            <div class="cloud-labels">
+              <span>Samlet skydække ved opgang: <strong id="morningTotalClouds">35%</strong></span>
+            </div>
+            <div class="cloud-layers-grid">
+              <div class="cloud-layer-col">
+                <span class="cloud-layer-label">Lave: <strong id="morningValLow">0%</strong></span>
+                <div class="cloud-track"><div class="cloud-fill bar-low" id="morningBarLow" style="width: 0%"></div></div>
+              </div>
+              <div class="cloud-layer-col">
+                <span class="cloud-layer-label">Mellem: <strong id="morningValMid">0%</strong></span>
+                <div class="cloud-track"><div class="cloud-fill bar-mid" id="morningBarMid" style="width: 0%"></div></div>
+              </div>
+              <div class="cloud-layer-col">
+                <span class="cloud-layer-label">Høje: <strong id="morningValHigh">0%</strong></span>
+                <div class="cloud-track"><div class="cloud-fill bar-high" id="morningBarHigh" style="width: 0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 3. AFTEN: GYLDEN & BLÅ TIME -->
+      <article class="photo-card card-blue" id="cardEvening">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">🌆</span>
+            <div class="card-title">
+              <h3>Solnedgang & Aftenlys</h3>
+              <span class="card-subtitle">Gylden time efterfulgt af blå time</span>
+            </div>
+          </div>
+          <div class="score-badge high" id="eveningBadge">🔥 Flot solnedgang</div>
+        </div>
+
+        <div class="card-content">
+          <p class="assessment-text" id="eveningAssessment">
+            Beregner aftenens lysforhold...
+          </p>
+
+          <div class="time-window-grid">
+            <div class="time-box">
+              <span class="time-box-label">
+                <span>Gylden time</span>
+                <span class="compass-pill" id="eveningGoldenCompass">256° V</span>
+              </span>
+              <span class="time-box-value" id="eveningGoldenTime">17:15 – 18:05</span>
+              <span class="time-box-sub" id="eveningSunsetSub">Solnedgang kl. 17:40</span>
+            </div>
+            <div class="time-box">
+              <span class="time-box-label">
+                <span>Blå time</span>
+                <span class="compass-pill" id="eveningBlueCompass">Vest</span>
+              </span>
+              <span class="time-box-value" id="eveningBlueTime">18:05 – 18:35</span>
+              <span class="time-box-sub">perfekt til langtidseksponering</span>
+            </div>
+          </div>
+
+          <div class="cloud-breakdown-bar">
+            <div class="cloud-labels">
+              <span>Samlet skydække ved nedgang: <strong id="eveningTotalClouds">40%</strong></span>
+            </div>
+            <div class="cloud-layers-grid">
+              <div class="cloud-layer-col">
+                <span class="cloud-layer-label">Lave: <strong id="eveningValLow">0%</strong></span>
+                <div class="cloud-track"><div class="cloud-fill bar-low" id="eveningBarLow" style="width: 0%"></div></div>
+              </div>
+              <div class="cloud-layer-col">
+                <span class="cloud-layer-label">Mellem: <strong id="eveningValMid">0%</strong></span>
+                <div class="cloud-track"><div class="cloud-fill bar-mid" id="eveningBarMid" style="width: 0%"></div></div>
+              </div>
+              <div class="cloud-layer-col">
+                <span class="cloud-layer-label">Høje: <strong id="eveningValHigh">0%</strong></span>
+                <div class="cloud-track"><div class="cloud-fill bar-high" id="eveningBarHigh" style="width: 0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 4. STJERNEHIMMEL & ASTRO -->
+      <article class="photo-card card-astro" id="cardAstro">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">✨</span>
+            <div class="card-title">
+              <h3>Stjerneklart & Natskyer</h3>
+              <span class="card-subtitle">Mælkevejen, stjernebilleder & deep-sky</span>
+            </div>
+          </div>
+          <div class="score-badge" id="astroBadge">✨ Stjerneklar</div>
+        </div>
+
+        <div class="card-content">
+          <p class="assessment-text" id="astroAssessment">
+            Beregner nattens stjerneforhold...
+          </p>
+
+          <div class="time-window-grid">
+            <div class="time-box">
+              <span class="time-box-label">Astronomisk mørke</span>
+              <span class="time-box-value" id="astroDarkWindow">19:50 – 05:20</span>
+              <span class="time-box-sub">solen under -18°</span>
+            </div>
+            <div class="time-box">
+              <span class="time-box-label">Gns. natskydække</span>
+              <span class="time-box-value" id="astroClouds">12%</span>
+              <span class="time-box-sub">klart udsyn til stjerner</span>
+            </div>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-item">
+              <span class="metric-val" id="astroMoonImpact">Ingen forstyrrelse</span>
+              <span class="metric-label">Månelys-påvirkning</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 5. MÅNEFASE & OPGANG/NEDGANG -->
+      <article class="photo-card card-moon" id="cardMoon">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon" id="moonIconHeader">🌕</span>
+            <div class="card-title">
+              <h3 id="moonPhaseTitle">Fuldmåne</h3>
+              <span class="card-subtitle" id="moonIllumSubtitle">100% belyst</span>
+            </div>
+          </div>
+          <div class="score-badge" id="moonBadge">🌕 Måne</div>
+        </div>
+
+        <div class="card-content">
+          <div class="time-window-grid">
+            <div class="time-box">
+              <span class="time-box-label">
+                <span>Måneopgang</span>
+                <span class="compass-pill" id="moonriseCompass">88° Ø</span>
+              </span>
+              <span class="time-box-value" id="moonriseTime">18:22</span>
+              <span class="time-box-sub">tidspunkt i dag</span>
+            </div>
+            <div class="time-box">
+              <span class="time-box-label">
+                <span>Månenedgang</span>
+                <span class="compass-pill" id="moonsetCompass">274° V</span>
+              </span>
+              <span class="time-box-value" id="moonsetTime">07:15</span>
+              <span class="time-box-sub">tidspunkt i dag</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- FOLD-UD DETALJERET TIME-FOR-TIME OVERBLIK -->
+      <section class="accordion-wrap">
+        <button class="accordion-toggle" id="btnToggleHourly">
+          <span>📊 Se alle 24 timer (dugpunkt, skyer i lag, vind)</span>
+          <span class="accordion-arrow">▼</span>
+        </button>
+
+        <div class="accordion-content" id="hourlyContent">
+          <div class="hourly-table-wrap">
+            <table class="hourly-table">
+              <thead>
+                <tr>
+                  <th>Tid</th>
+                  <th>Vejr</th>
+                  <th>Temp</th>
+                  <th>Dugp.</th>
+                  <th>Fugt</th>
+                  <th>Lave skyer</th>
+                  <th>Mellem</th>
+                  <th>Høje</th>
+                  <th>Vind</th>
+                  <th>Sigt</th>
+                </tr>
+              </thead>
+              <tbody id="hourlyTableBody">
+                <!-- Genereres dynamisk i app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <div>Clear or Foggy – PWA til fotografer</div>
+      <div>Vejrdata: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> • Astronomi: SunCalc algoritme (offline)</div>
+    </footer>
+
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="astro.js"></script>
+  <script src="weather.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

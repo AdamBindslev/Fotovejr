@@ -3,7 +3,7 @@
  * Giver fuld offline-adgang i felten for fototider og seneste vejrdata.
  */
 
-const CACHE_NAME = 'fotovejr-fs-v10';
+const CACHE_NAME = 'fotovejr-fs-v11';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -47,7 +47,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // For API-kald til Open-Meteo: Network-first, med fallback til cache
+  // 1. For API-kald til Open-Meteo: Network-first med fallback til cache
   if (url.hostname.includes('open-meteo.com')) {
     event.respondWith(
       fetch(event.request)
@@ -65,9 +65,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For lokale filer: Cache-first med netværks-opdatering
+  // 2. For navigation / HTML dokument: Network-first så brugeren altid får nyeste version når online
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('index.html') || url.pathname.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request) || caches.match('./index.html');
+        })
+    );
+    return;
+  }
+
+  // 3. For lokale aktiver (CSS, JS, billeder): Cache med ignoreSearch og netværksfallback
   event.respondWith(
-    caches.match(event.request).then((cached) => {
+    caches.match(event.request, { ignoreSearch: true }).then((cached) => {
       if (cached) return cached;
       return fetch(event.request).then((response) => {
         if (response && response.status === 200) {

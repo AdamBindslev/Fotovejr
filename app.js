@@ -177,10 +177,21 @@
         navigator.serviceWorker.register('./sw.js')
           .then((reg) => {
             console.log('Service Worker registreret:', reg.scope);
+            // Tving øjeblikkeligt tjek for opdateringer i felten
+            reg.update();
           })
           .catch((err) => {
             console.warn('Service Worker fejl:', err);
           });
+      });
+
+      // Lyt efter controllerchange så appen automatisk opdaterer når en ny SW er aktiv
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
       });
     }
   }

@@ -180,6 +180,7 @@ body {
   align-items: center;
   gap: 6px;
   line-height: 1;
+  flex-wrap: wrap;
 }
 
 .brand-badge-fotovejr {
@@ -192,6 +193,35 @@ body {
   padding: 2px 5px;
   border-radius: 2px;
   text-transform: uppercase;
+}
+
+.badge-beta {
+  background: rgba(245, 158, 11, 0.16);
+  color: var(--golden-primary);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.badge-beta-sm {
+  font-size: 0.55rem;
+  padding: 1px 4px;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+body.theme-night-red .badge-beta {
+  background: rgba(255, 68, 68, 0.16);
+  border-color: rgba(255, 68, 68, 0.45);
+  color: var(--golden-primary);
 }
 
 .brand-tagline {

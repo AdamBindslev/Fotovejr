@@ -29,19 +29,45 @@
     <!-- KOMPAKT EVF KAMERA-HEADER -->
     <header class="app-header">
       <div class="evf-topbar">
-        <!-- Brand -->
-        <div class="evf-brand">
-          <img src="logo-fs.jpg" alt="Fotografiske Signaler" class="evf-logo" width="32" height="32">
-          <div class="evf-brand-text">
-            <span class="evf-title">FOTOVEJR</span>
-            <span class="evf-sub">af Fotografiske Signaler</span>
+        <!-- Række 1: Brand & Kamera-controls -->
+        <div class="evf-topbar-primary">
+          <div class="evf-brand">
+            <img src="logo-fs.jpg" alt="Fotografiske Signaler" class="evf-logo" width="30" height="30">
+            <div class="evf-brand-text">
+              <span class="evf-title">FOTOVEJR</span>
+              <span class="evf-sub">af Fotografiske Signaler</span>
+            </div>
+          </div>
+
+          <div class="evf-controls">
+            <button id="btnGps" class="evf-btn" title="Opdater GPS-position i felten" aria-label="Opdater GPS">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path>
+              </svg>
+            </button>
+            <button id="btnSearchOpen" class="evf-btn" title="Søg by eller fotospot" aria-label="Søg">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+            <button id="btnRefresh" class="evf-btn" title="Genindlæs vejrdata" aria-label="Opdater">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+            </button>
+            <button id="btnNightMode" class="evf-btn evf-night-btn" title="Rød Astro Nattilstand (bevarer nattesyn)" aria-label="Astro Nattilstand">
+              <span class="night-mode-dot"></span>
+              <span class="night-mode-label">ASTRO</span>
+            </button>
           </div>
         </div>
 
-        <!-- EVF Lokation Status -->
-        <div class="evf-status-pill" id="locationCurrentWrap" title="Klik for at søge anden by eller fotospot">
+        <!-- Række 2: Lokationsstatus og Søger-felt -->
+        <div class="evf-location-bar" id="locationCurrentWrap" title="Klik for at søge anden by eller fotospot">
           <span class="evf-reticle" id="locationPinIcon">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <circle cx="12" cy="12" r="8"></circle>
               <line x1="12" y1="2" x2="12" y2="6"></line>
               <line x1="12" y1="18" x2="12" y2="22"></line>
@@ -49,35 +75,9 @@
               <line x1="18" y1="12" x2="22" y2="12"></line>
             </svg>
           </span>
-          <div class="evf-loc-info">
-            <span class="evf-loc-name" id="locName">Søger GPS...</span>
-            <span class="evf-loc-sub" id="locCoords">Finder koordinater...</span>
-          </div>
-        </div>
-
-        <!-- EVF Hurtigknapper -->
-        <div class="evf-controls">
-          <button id="btnGps" class="evf-btn" title="Opdater GPS-position i felten" aria-label="Opdater GPS">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path>
-            </svg>
-          </button>
-          <button id="btnSearchOpen" class="evf-btn" title="Søg by eller fotospot" aria-label="Søg">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-          <button id="btnRefresh" class="evf-btn" title="Genindlæs vejrdata" aria-label="Opdater">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-            </svg>
-          </button>
-          <button id="btnNightMode" class="evf-btn evf-night-btn" title="Rød Astro Nattilstand (bevarer nattesyn)" aria-label="Astro Nattilstand">
-            <span class="night-mode-dot"></span>
-            <span class="night-mode-label">ASTRO</span>
-          </button>
+          <span class="evf-loc-name" id="locName">Søger GPS...</span>
+          <span class="evf-loc-sub" id="locCoords">Finder position...</span>
+          <span class="evf-search-hint">Søg spot 🔍</span>
         </div>
       </div>
 

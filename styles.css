@@ -348,20 +348,19 @@ body {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: var(--radius-sm);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--golden-primary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-cal-card:hover {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.4);
-  color: var(--golden-primary);
+  background: var(--golden-primary);
+  color: #07080a;
 }
 
 .btn-toggle-deep-data {
@@ -616,6 +615,32 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.btn-cal-quick {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--golden-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-cal-quick:hover {
+  background: var(--golden-primary);
+  color: #07080a;
+}
+
+.btn-cal-quick:active {
+  transform: scale(0.96);
 }
 
 .day-chip-name {

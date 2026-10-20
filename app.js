@@ -44,6 +44,7 @@
     selectedDayBanner: document.getElementById('selectedDayBanner'),
     dayBannerTitle: document.getElementById('dayBannerTitle'),
     dayBannerSubtitle: document.getElementById('dayBannerSubtitle'),
+    btnCalDayBanner: document.getElementById('btnCalDayBanner'),
 
     // Tåge
     cardFog: document.getElementById('cardFog'),
@@ -617,6 +618,82 @@
       chips[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
     renderSelectedDay();
+  }
+
+  // Beregner det aktuelle eller næste fotovindue for valgt dag til hurtig kalendereksport
+  function getBannerCalendarPayload(day) {
+    if (!day || !day.sun) return null;
+    const now = new Date();
+    const sun = day.sun;
+    const locName = state.currentLoc.name || 'Lokation';
+    const isToday = state.selectedDayIndex === 0;
+
+    let title = '';
+    let desc = '';
+    let start = null;
+    let end = null;
+
+    if (isToday) {
+      const fogEnd = sun.sunrise ? new Date(sun.sunrise.getTime() + 65 * 60 * 1000) : null;
+      const mEnd = sun.goldenHourMorning ? sun.goldenHourMorning.end : null;
+      const eStart = sun.goldenHourEvening ? sun.goldenHourEvening.start : null;
+      const eEnd = sun.blueHourEvening ? sun.blueHourEvening.end : null;
+      const aStart = sun.astronomicalDusk;
+
+      if (fogEnd && now <= fogEnd) {
+        start = new Date(sun.sunrise.getTime() - 60 * 60 * 1000);
+        end = fogEnd;
+        title = `📸 FotoVejr: Morgentåge & Solopgang (${locName})`;
+        desc = `Morgentåge og daggry ved ${locName}.\nSolopgang kl. ${AstroCalc.formatTime(sun.sunrise)}.`;
+      } else if (mEnd && now <= mEnd) {
+        start = (sun.blueHourMorning && sun.blueHourMorning.start) || new Date(sun.sunrise.getTime() - 50 * 60 * 1000);
+        end = mEnd;
+        title = `📸 FotoVejr: Daggry & Gylden Time (${locName})`;
+        desc = `Morgenlys ved ${locName}.\nSolopgang kl. ${AstroCalc.formatTime(sun.sunrise)}.`;
+      } else if (eStart && now < eStart) {
+        start = eStart;
+        end = eEnd || new Date(sun.sunset.getTime() + 45 * 60 * 1000);
+        title = `📸 FotoVejr: Solnedgang & Aftenlys (${locName})`;
+        desc = `Gylden time og solnedgang ved ${locName}.\nSolnedgang kl. ${AstroCalc.formatTime(sun.sunset)}.`;
+      } else if (eEnd && now <= eEnd) {
+        start = eStart || new Date(sun.sunset.getTime() - 45 * 60 * 1000);
+        end = eEnd;
+        title = `📸 FotoVejr: Solnedgang & Blå Time (${locName})`;
+        desc = `Aftenlys ved ${locName}.\nSolnedgang kl. ${AstroCalc.formatTime(sun.sunset)}.`;
+      } else if (aStart) {
+        start = aStart;
+        end = sun.astronomicalDawn ? new Date(sun.astronomicalDawn.getTime() + 24 * 60 * 60 * 1000) : new Date(aStart.getTime() + 8 * 60 * 60 * 1000);
+        title = `📸 FotoVejr: Astronomisk Stjernehimmel (${locName})`;
+        desc = `Astronomisk nat ved ${locName}.\nNatskydække: ${day.astro.avgClouds}%.`;
+      }
+    } else {
+      if (day.fog && day.fog.score >= 55) {
+        start = new Date(sun.sunrise.getTime() - 60 * 60 * 1000);
+        end = new Date(sun.sunrise.getTime() + 65 * 60 * 1000);
+        title = `📸 FotoVejr: Morgentåge (${locName})`;
+        desc = `Morgentåge og solopgang kl. ${AstroCalc.formatTime(sun.sunrise)} ved ${locName}.`;
+      } else if (sun.goldenHourEvening && day.goldenEvening && day.goldenEvening.score >= 60) {
+        start = sun.goldenHourEvening.start;
+        end = sun.blueHourEvening ? sun.blueHourEvening.end : new Date(sun.sunset.getTime() + 45 * 60 * 1000);
+        title = `📸 FotoVejr: Solnedgang & Aftenlys (${locName})`;
+        desc = `Solnedgang kl. ${AstroCalc.formatTime(sun.sunset)} ved ${locName}.`;
+      } else if (sun.sunrise) {
+        start = (sun.blueHourMorning && sun.blueHourMorning.start) || new Date(sun.sunrise.getTime() - 50 * 60 * 1000);
+        end = (sun.goldenHourMorning && sun.goldenHourMorning.end) || new Date(sun.sunrise.getTime() + 45 * 60 * 1000);
+        title = `📸 FotoVejr: Daggry & Morgenlys (${locName})`;
+        desc = `Solopgang kl. ${AstroCalc.formatTime(sun.sunrise)} ved ${locName}.`;
+      }
+    }
+
+    if (!start || !end) return null;
+    return {
+      title: title,
+      description: desc,
+      location: locName,
+      start: start,
+      end: end,
+      alarmMinutes: 45
+    };
   }
 
   // Opdaterer det overordnede "Viser dag"-banner under dagsvælgeren
@@ -1293,6 +1370,17 @@
       const isOpen = el.hourlyContent.classList.toggle('open');
       el.btnToggleHourly.classList.toggle('open', isOpen);
     });
+
+    // Hurtig-kalender knap på dagsbanneret
+    if (el.btnCalDayBanner) {
+      el.btnCalDayBanner.addEventListener('click', () => {
+        const day = state.parsedDays[state.selectedDayIndex];
+        const payload = getBannerCalendarPayload(day);
+        if (payload) {
+          downloadCalendarEvent(payload);
+        }
+      });
+    }
 
     // Kort-specifikke kalenderknapper
     if (el.btnCalFog) {

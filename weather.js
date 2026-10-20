@@ -13,7 +13,7 @@
 })(typeof self !== 'undefined' ? self : this, function (AstroCalc) {
   'use strict';
 
-  var CACHE_PREFIX = 'photoweather_cache_';
+  var CACHE_PREFIX = 'photoweather_cache_v2_';
 
   // Henter vejrdata for koordinater (med fallback til cache ved offline)
   async function fetchForecast(lat, lng, forceRefresh = false) {
@@ -56,6 +56,7 @@
           'sunset',
           'uv_index_max'
         ].join(','));
+        url.searchParams.set('wind_speed_unit', 'ms');
         url.searchParams.set('timezone', 'auto');
         url.searchParams.set('forecast_days', '7');
 
@@ -195,6 +196,13 @@
       var idx = startHourIndex + i;
       if (idx < hRaw.time.length) {
         var hTime = new Date(hRaw.time[idx]);
+        var rawWind = (hRaw.wind_speed_10m && hRaw.wind_speed_10m[idx] !== undefined)
+          ? hRaw.wind_speed_10m[idx]
+          : 0;
+        // Hvis data mod forventning er i km/h (f.eks. fra ældre cache), konverteres til m/s:
+        var isKmh = weatherData.hourly_units && weatherData.hourly_units.wind_speed_10m === 'km/h';
+        var windSpeedMs = isKmh ? (rawWind / 3.6) : rawWind;
+
         hourly.push({
           hour: hTime.getHours(),
           timeStr: hRaw.time[idx],
@@ -207,7 +215,7 @@
           cloudMid: hRaw.cloud_cover_mid[idx],
           cloudHigh: hRaw.cloud_cover_high[idx],
           visibility: hRaw.visibility[idx], // meter
-          windSpeed: hRaw.wind_speed_10m[idx], // km/h
+          windSpeed: windSpeedMs, // m/s
           weatherCode: hRaw.weather_code[idx],
           precipProb: hRaw.precipitation_probability ? hRaw.precipitation_probability[idx] : 0
         });
@@ -259,7 +267,7 @@
 
   // Algoritme til tågerisiko:
   // Tåge (især strålingståge) dannes når dugpunktstemperaturen er næsten lig med lufttemperaturen (spread < 2°C),
-  // relativ luftfugtighed > 88%, lav vindstyrke (< 10 km/t) og klar nattehimmel der fremmer udstråling.
+  // relativ luftfugtighed > 88%, lav vindstyrke (< 2-3 m/s) og klar nattehimmel der fremmer udstråling.
   function calculateFogScore(hourly, sun) {
     if (!hourly || hourly.length === 0) return { score: 0, text: 'Ingen data' };
 
@@ -311,10 +319,10 @@
     else if (avgHumidity >= 80) points += 8;
 
     // Vindforhold (maks 20 point - let brise eller vindstille er ideelt)
-    if (avgWind <= 7) points += 20; // < 2 m/s
-    else if (avgWind <= 12) points += 14;
-    else if (avgWind <= 18) points += 6;
-    else points -= 15; // Kraftig blæst forhindrer tågedannelse
+    if (avgWind <= 2.0) points += 20; // Rolig vind / let brise (< 2 m/s)
+    else if (avgWind <= 3.5) points += 14; // Svag vind (2 - 3.5 m/s)
+    else if (avgWind <= 5.0) points += 6; // Moderat vind (3.5 - 5 m/s)
+    else points -= 15; // Kraftig blæst (> 5 m/s) forhindrer tågedannelse
 
     // Sigtbarhed og officielle vejrkoder (maks 20 point)
     if (hasFogWeatherCode || minVisibility <= 1000) points += 20;
@@ -352,7 +360,7 @@
       classType: classType,
       avgSpread: avgSpread.toFixed(1),
       avgHumidity: Math.round(avgHumidity),
-      avgWind: Math.round(avgWind),
+      avgWind: avgWind.toFixed(1),
       minVisibilityKm: (minVisibility / 1000).toFixed(1)
     };
   }

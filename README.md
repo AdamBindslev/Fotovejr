@@ -15,7 +15,7 @@ Appen starter automatisk med at finde din **aktuelle GPS-position**, navngiver a
 
 2. **🌫️ Morgentåge- & Dis-indeks**:
    - Vurderer sandsynligheden for strålingståge over lavninger, søer og enge ved daggry.
-   - Beregnet ud fra forskellen mellem temperatur og dugpunkt ($\Delta T = T - T_d < 2^\circ\text{C}$), relativ luftfugtighed (> 88%), lav vindhastighed og sigtbarhed.
+   - Beregnet ud fra forskellen mellem temperatur og dugpunkt ($\Delta T = T - T_d < 2^\circ\text{C}$), relativ luftfugtighed (> 88%), lav vindhastighed (< 2-3 m/s) og sigtbarhed.
 
 3. **🌅 Gylden Time & 🌆 Blå Time (Morgen & Aften)**:
    - Nøjagtige start- og sluttidspunkter for både morgenens og aftenens gyldne og blå time.

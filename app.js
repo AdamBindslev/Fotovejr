@@ -658,7 +658,7 @@
 
     el.fogSpread.textContent = `${fog.avgSpread}°C`;
     el.fogHumidity.textContent = `${fog.avgHumidity}%`;
-    el.fogWind.textContent = `${fog.avgWind} km/t`;
+    el.fogWind.textContent = `${fog.avgWind} m/s`;
     el.fogVisibility.textContent = `${fog.minVisibilityKm} km`;
   }
 
@@ -961,7 +961,7 @@
         <td style="color: ${h.cloudLow > 60 ? '#ef4444' : '#94a3b8'}">${h.cloudLow}%</td>
         <td style="color: #38bdf8">${h.cloudMid}%</td>
         <td style="color: #f59e0b">${h.cloudHigh}%</td>
-        <td>${Math.round(h.windSpeed)} km/t</td>
+        <td>${h.windSpeed != null ? h.windSpeed.toFixed(1) : '-'} m/s</td>
         <td>${(h.visibility / 1000).toFixed(1)} km</td>
       `;
       el.hourlyTableBody.appendChild(tr);

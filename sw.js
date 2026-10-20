@@ -3,7 +3,7 @@
  * Giver fuld offline-adgang i felten for fototider og seneste vejrdata.
  */
 
-const CACHE_NAME = 'clear-foggy-v1';
+const CACHE_NAME = 'fotovejr-fs-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -14,7 +14,10 @@ const STATIC_ASSETS = [
   './manifest.webmanifest',
   './icon.svg',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './apple-touch-icon.png',
+  './logo-fs.jpg',
+  './fotografiske-signaler-wordmark.png'
 ];
 
 self.addEventListener('install', (event) => {

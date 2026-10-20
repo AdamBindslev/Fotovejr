@@ -12,8 +12,8 @@
   <title>FotoVejr – Fotografiske Signaler</title>
 
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -30,10 +30,13 @@
     <header class="app-header">
       <div class="header-top">
         <div class="brand">
-          <img src="icon.svg" alt="FotoVejr Logo" class="brand-icon astro-native">
-          <div class="brand-title">
-            <h1>FotoVejr</h1>
-            <span>Fotografiske Signaler</span>
+          <img src="logo-fs.jpg" alt="Fotografiske Signaler" class="brand-logo-fs" width="46" height="46">
+          <div class="brand-text-block">
+            <img src="fotografiske-signaler-wordmark.png" alt="Fotografiske Signaler" class="brand-wordmark">
+            <div class="brand-subtext">
+              <span class="brand-badge-fotovejr">FOTOVEJR</span>
+              <span class="brand-tagline">Vejrsignaler for fotografer</span>
+            </div>
           </div>
         </div>
 
@@ -377,8 +380,13 @@
 
     <!-- FOOTER -->
     <footer class="app-footer">
-      <div>FotoVejr – Fotografiske Signaler</div>
-      <div>Vejrdata: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> • Astronomi: SunCalc algoritme (offline)</div>
+      <div class="footer-brand-wrap">
+        <a href="https://fotografiskesignaler.dk" target="_blank" rel="noopener" title="Besøg Fotografiske Signaler">
+          <img src="fotografiske-signaler-wordmark.png" alt="Fotografiske Signaler" class="footer-wordmark">
+        </a>
+      </div>
+      <div class="footer-desc">FotoVejr – Et specialværktøj fra <a href="https://fotografiskesignaler.dk" target="_blank" rel="noopener">Fotografiske Signaler</a></div>
+      <div class="footer-meta">Vejrdata: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> • Astronomi: Offline ephemeris</div>
     </footer>
 
   </div>

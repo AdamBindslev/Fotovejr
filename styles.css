@@ -3,18 +3,22 @@
  */
 
 :root {
-  --bg-primary: #0a0d14;
-  --bg-surface: #121722;
-  --bg-surface-elevated: #1a2232;
-  --bg-card: rgba(22, 29, 44, 0.75);
+  --bg-primary: #07080a;
+  --bg-surface: #0f1217;
+  --bg-surface-elevated: #161b22;
+  --bg-card: rgba(16, 20, 27, 0.82);
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-highlight: rgba(255, 255, 255, 0.16);
 
-  --text-main: #f1f5f9;
+  --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
 
-  /* Fotografiske accentfarver */
+  /* Fotografiske Signaler brand-accenter */
+  --fs-silver: #c8cbce;
+  --fs-silver-dark: #8e9499;
+
+  /* Fotografiske vejr-accenter */
   --golden-primary: #f59e0b;
   --golden-glow: rgba(245, 158, 11, 0.25);
   --golden-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
@@ -35,11 +39,14 @@
   --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
 
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-pill: 9999px;
 
+  /* Typografi med Fotografiske Signaler serif-æstetik */
+  --font-serif: "Playfair Display", "Didot", "Bodoni MT", Georgia, "Times New Roman", serif;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -139,29 +146,60 @@ body {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.brand-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+.brand-logo-fs {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-xs);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.brand-title h1 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+.brand-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
 }
 
-.brand-title span {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+.brand-wordmark {
+  height: 18px;
+  width: auto;
+  max-width: 195px;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
+
+.brand-subtext {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.brand-badge-fotovejr {
+  background: var(--fs-silver);
+  color: #050608;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 5px;
+  border-radius: 2px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
+}
+
+.brand-tagline {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
 }
 
 .header-actions {
@@ -550,9 +588,11 @@ body {
 }
 
 .card-title h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-main);
 }
 
 .card-subtitle {
@@ -834,17 +874,44 @@ body {
 /* FOOTER */
 .app-footer {
   text-align: center;
-  padding: 16px 0;
+  padding: 24px 0 16px;
   font-size: 0.75rem;
   color: var(--text-dim);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 }
 
-.app-footer a {
+.footer-brand-wrap {
+  margin-bottom: 2px;
+}
+
+.footer-wordmark {
+  height: 20px;
+  width: auto;
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+
+.footer-wordmark:hover {
+  opacity: 1;
+}
+
+.footer-desc {
   color: var(--text-muted);
-  text-decoration: none;
+}
+
+.footer-desc a,
+.footer-meta a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer-meta {
+  font-size: 0.7rem;
+  color: var(--text-dim);
 }
 
 /* LOADING SPINNER */

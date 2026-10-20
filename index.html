@@ -98,6 +98,14 @@
       <div class="days-scroll" id="daysScroll">
         <!-- 7 dag-chips genereres dynamisk i app.js -->
       </div>
+      <!-- Aktuelt valgt dag & næste fotobegivenhed -->
+      <div class="selected-day-banner" id="selectedDayBanner">
+        <span class="day-banner-calendar">📅</span>
+        <div class="day-banner-content">
+          <span class="day-banner-title" id="dayBannerTitle">I dag</span>
+          <span class="day-banner-subtitle" id="dayBannerSubtitle">Beregner fototider...</span>
+        </div>
+      </div>
     </section>
 
     <!-- FOKUS KORT: Dagens Fotomuligheder -->
@@ -116,6 +124,14 @@
           <div class="score-badge" id="fogBadge">Beregner...</div>
         </div>
 
+        <div class="card-timing-banner" id="fogTimingBanner">
+          <div class="timing-banner-left">
+            <span class="timing-icon">🌫️</span>
+            <span class="timing-label" id="fogTimingLabel">Beregner tidspunkt...</span>
+          </div>
+          <span class="timing-banner-pill" id="fogTimingPill">--</span>
+        </div>
+
         <div class="card-content">
           <p class="assessment-text" id="fogAssessment">
             Beregner chancer for tågedannelse...
@@ -125,7 +141,7 @@
             <div class="time-box">
               <span class="time-box-label">Optimalt tidsrum</span>
               <span class="time-box-value" id="fogTimeWindow">05:30 – 08:15</span>
-              <span class="time-box-sub">omkring solopgang</span>
+              <span class="time-box-sub" id="fogTimeSub">omkring solopgang</span>
             </div>
             <div class="time-box">
               <span class="time-box-label">Dugpunkts-forskel</span>
@@ -148,6 +164,8 @@
               <span class="metric-label">Min. sigtbarhed</span>
             </div>
           </div>
+
+          <div class="card-passed-action" id="fogJumpAction" style="display: none;"></div>
         </div>
       </article>
 
@@ -164,6 +182,14 @@
           <div class="score-badge high" id="morningBadge">🌅 Gylden time</div>
         </div>
 
+        <div class="card-timing-banner" id="morningTimingBanner">
+          <div class="timing-banner-left">
+            <span class="timing-icon">🌅</span>
+            <span class="timing-label" id="morningTimingLabel">Beregner tidspunkt...</span>
+          </div>
+          <span class="timing-banner-pill" id="morningTimingPill">--</span>
+        </div>
+
         <div class="card-content">
           <p class="assessment-text" id="morningAssessment">
             Beregner morgenens lysforhold...
@@ -176,7 +202,7 @@
                 <span class="compass-pill" id="morningBlueCompass">Øst</span>
               </span>
               <span class="time-box-value" id="morningBlueTime">06:15 – 06:45</span>
-              <span class="time-box-sub">dybblå himmel & bylancering</span>
+              <span class="time-box-sub" id="morningBlueSub">dybblå himmel & bylancering</span>
             </div>
             <div class="time-box">
               <span class="time-box-label">
@@ -207,6 +233,8 @@
               </div>
             </div>
           </div>
+
+          <div class="card-passed-action" id="morningJumpAction" style="display: none;"></div>
         </div>
       </article>
 
@@ -221,6 +249,14 @@
             </div>
           </div>
           <div class="score-badge high" id="eveningBadge">🔥 Flot solnedgang</div>
+        </div>
+
+        <div class="card-timing-banner" id="eveningTimingBanner">
+          <div class="timing-banner-left">
+            <span class="timing-icon">🌆</span>
+            <span class="timing-label" id="eveningTimingLabel">Beregner tidspunkt...</span>
+          </div>
+          <span class="timing-banner-pill" id="eveningTimingPill">--</span>
         </div>
 
         <div class="card-content">
@@ -243,7 +279,7 @@
                 <span class="compass-pill" id="eveningBlueCompass">Vest</span>
               </span>
               <span class="time-box-value" id="eveningBlueTime">18:05 – 18:35</span>
-              <span class="time-box-sub">perfekt til langtidseksponering</span>
+              <span class="time-box-sub" id="eveningBlueSub">perfekt til langtidseksponering</span>
             </div>
           </div>
 
@@ -282,6 +318,14 @@
           <div class="score-badge" id="astroBadge">✨ Stjerneklar</div>
         </div>
 
+        <div class="card-timing-banner" id="astroTimingBanner">
+          <div class="timing-banner-left">
+            <span class="timing-icon">✨</span>
+            <span class="timing-label" id="astroTimingLabel">Beregner tidspunkt...</span>
+          </div>
+          <span class="timing-banner-pill" id="astroTimingPill">--</span>
+        </div>
+
         <div class="card-content">
           <p class="assessment-text" id="astroAssessment">
             Beregner nattens stjerneforhold...
@@ -291,7 +335,7 @@
             <div class="time-box">
               <span class="time-box-label">Astronomisk mørke</span>
               <span class="time-box-value" id="astroDarkWindow">19:50 – 05:20</span>
-              <span class="time-box-sub">solen under -18°</span>
+              <span class="time-box-sub" id="astroDarkSub">solen under -18°</span>
             </div>
             <div class="time-box">
               <span class="time-box-label">Gns. natskydække</span>
@@ -322,6 +366,14 @@
           <div class="score-badge" id="moonBadge">🌕 Måne</div>
         </div>
 
+        <div class="card-timing-banner" id="moonTimingBanner">
+          <div class="timing-banner-left">
+            <span class="timing-icon">🌕</span>
+            <span class="timing-label" id="moonTimingLabel">Måneopgang & nedgang</span>
+          </div>
+          <span class="timing-banner-pill" id="moonTimingPill">I dag</span>
+        </div>
+
         <div class="card-content">
           <div class="time-window-grid">
             <div class="time-box">
@@ -330,7 +382,7 @@
                 <span class="compass-pill" id="moonriseCompass">88° Ø</span>
               </span>
               <span class="time-box-value" id="moonriseTime">18:22</span>
-              <span class="time-box-sub">tidspunkt i dag</span>
+              <span class="time-box-sub" id="moonriseSub">tidspunkt i dag</span>
             </div>
             <div class="time-box">
               <span class="time-box-label">
@@ -338,7 +390,7 @@
                 <span class="compass-pill" id="moonsetCompass">274° V</span>
               </span>
               <span class="time-box-value" id="moonsetTime">07:15</span>
-              <span class="time-box-sub">tidspunkt i dag</span>
+              <span class="time-box-sub" id="moonsetSub">tidspunkt i dag</span>
             </div>
           </div>
         </div>
